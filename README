@@ -13,3 +13,9 @@ mklivesocket = Nagios::MkLiveStatus.new(path)
 mklivesocket.query(mkliveQuery)
 
 Please refer to the rdoc in order to have a complete description of each class.
+
+TODO:
+	- managing exceptions throws by the socket
+	- controlling livestatus query validity
+	- adding OR and AND query filter support
+	- adding support to http
