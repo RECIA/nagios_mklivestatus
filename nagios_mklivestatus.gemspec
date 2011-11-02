@@ -1,10 +1,10 @@
 Gem::Specification.new do |s| 
   s.name = "nagios_mklivestatus"
   s.description = "Querying Nagios MKLiveStatus through TCP or Unix sockets"
-  s.version = "0.0.1"
+  s.version = "0.0.3"
   s.author = "Esco-lan Team"
   s.email = "team@esco-lan.org"
-  s.homepage = "http://blogs.cocoondev.org/crafterm/"
+  s.homepage = "https://github.com/RECIA/nagios_mklivestatus"
   s.platform = Gem::Platform::RUBY
   s.summary = "Querying Nagios MKLiveStatus through sockets TCP or Unix"
   s.files = ["lib/nagios_mklivestatus.rb", "lib/nagios_mklivestatus/query.rb"]
