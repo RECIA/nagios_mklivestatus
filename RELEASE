@@ -1,0 +1,9 @@
+= nagios_mklivestatus version 0.0.2
+
+== 0.0.1
+
+* Creation initial release of the gem
+
+== 0.0.2
+
+* include user authentification for query.

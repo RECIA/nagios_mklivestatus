@@ -25,6 +25,9 @@ module Nagios
     
     #debug mode : default to false
     @debug = false
+    
+    #user mode : default nil
+    @user = nil
   
     # Initialize the nagios mklivestatus socket informations.
     #
@@ -32,16 +35,22 @@ module Nagios
     # * TCP : path equal to "tcp://<host>:<port>"
     # * File : where path is the path to the file
     #
-    # If debug is set to true it will indicates the information used for the socket 
-    # and the query and result of each queries call
-    def initialize(path,debug=false)
+    # The second parameter is a hash of options of MkLiveStatus :
+    # * :debug : will activate or not the debugging (true or false) 
+    # * :user : is the user used with AuthUser of MkLiveStatus for hosts, services, hostgroups, servicegroup and log
+    # 
+    def initialize(path,options={:debug=> false})
       
       #set debug mode
-      if debug
+      if options.has_key? :debug and options[:debug]
         @debug = true
       end
       
-      puts ""
+      #set user
+      if options.has_key? :user and options[:user] != nil and not options[:user].empty?
+        @user = options[:user]
+      end
+      
       #check socket type
       # if the path start with tcp:// => tcp socket
       if path.strip.start_with?("tcp://")
@@ -76,7 +85,7 @@ module Nagios
     #  ....
     #
     def query(query=nil)
-      
+     
       socket=nil
       
       puts ""
@@ -93,10 +102,15 @@ module Nagios
       #if socket is generated and query exists
       if socket != nil and query != nil and query.to_s.upcase.start_with?("GET ")
         
-        strQuery = query.to_s 
+        strQuery = "#{query}"
         #the endline must be empty
         if not strQuery.end_with?("\n")
           strQuery << "\n"
+        end
+        
+        #set user if needed
+        if @user != nil and not @user.empty? and strQuery.match /^GET\s+(hosts|hostgroups|services|servicegroup|log)\s*$/
+          strQuery << "UserAuth: #{@user}\n"
         end
         
         puts ""
