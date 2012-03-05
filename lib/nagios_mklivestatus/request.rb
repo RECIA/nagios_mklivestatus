@@ -158,7 +158,7 @@ private
   def check_receiving_error( datas )
     error_code = datas.split(" ")[0].to_i
     if error_code > 200
-      raise Exception, "Nagios::MkLiveStatus.query return an error_code #{error_code}"
+      raise RequestException, "query had returned an error_code #{error_code} : #{datas.split("\n")[1]}"
     end
   end
   
