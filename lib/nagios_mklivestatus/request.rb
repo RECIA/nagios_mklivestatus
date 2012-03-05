@@ -19,6 +19,9 @@ class Nagios::MkLiveStatus::Request
   
   #user mode : default nil
   @user = nil
+  
+  #columns header mode
+  @column_headers = false
 
   # Initialize the nagios mklivestatus socket informations.
   #
@@ -29,12 +32,18 @@ class Nagios::MkLiveStatus::Request
   # The second parameter is a hash of options of MkLiveStatus :
   # * :debug : will activate or not the debugging (true or false) 
   # * :user : is the user used with AuthUser of MkLiveStatus for hosts, services, hostgroups, servicegroup and log
+  # * :column_headers : set to true to have the headers of the query as first line
   # 
   def initialize(path,options={:debug=> false})
     
     #set debug mode
     if options.has_key? :debug and options[:debug]
       @debug = true
+    end
+    
+    #set debug mode
+    if options.has_key? :column_headers and options[:column_headers]
+      @column_headers = true
     end
     
     #set user
@@ -104,12 +113,17 @@ class Nagios::MkLiveStatus::Request
         strQuery << "UserAuth: #{@user}\n"
       end
       
+      # set columns headers
+      if @column_headers
+        strQuery << "ColumnHeaders: on\n"
+      end
+      
       puts ""
       puts "---" if @debug
       puts strQuery if @debug
       puts "---" if @debug
       
-      # set response header to 16
+      #get error message if some are given
       strQuery << "ResponseHeader: fixed16\n"
       
       # query the socket

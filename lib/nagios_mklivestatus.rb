@@ -28,6 +28,7 @@ module Nagios
     # The second parameter is a hash of options of MkLiveStatus :
     # * :debug : will activate or not the debugging (true or false) 
     # * :user : is the user used with AuthUser of MkLiveStatus for hosts, services, hostgroups, servicegroup and log
+    # * :column_headers : set to true to have the headers of the query as first line
     # 
     def prepare_request(path,options={:debug=> false})
       Request.new(path, options)
