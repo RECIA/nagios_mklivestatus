@@ -41,12 +41,40 @@ class Nagios::MkLiveStatus::Query
   
   # Add a filter to the query
   def addFilter(expression)
-    if not expression == nil or expression.empty?
+    if expression.is_a? Nagios::MkLiveStatus::Filter
       if @filters == nil
         @filters=Array.new
       end
       
       @filters.push(expression)
+    else
+      raise QueryException.new("The filter must be a filter expression.")
+    end
+  end
+  
+  # Add a stat filter 
+  def addStats(expression)
+    if expression.is_a? Nagios::MkLiveStatus::Stats
+      if @stats == nil
+        @stats=Array.new
+      end
+      
+      @stats.push(expression)
+    else
+      raise QueryException.new("The filter must be a stat expression.")
+    end
+  end
+  
+  # Add a group by
+  def addStats(expression)
+    if expression.is_a? Nagios::MkLiveStatus::Stats
+      if @groups == nil
+        @groups=Array.new
+      end
+      
+      @groups.push(expression)
+    else
+      raise QueryException.new("The filter must be a stat expression.")
     end
   end
   
@@ -62,6 +90,12 @@ class Nagios::MkLiveStatus::Query
     if @get != nil
       query << "GET "+@get+"\n"
       
+      if @groups != nil and @groups.length > 0
+        @groups.each do |group|
+          query << group.to_s+"\n"
+        end
+      end
+      
       if @columns != nil and @columns.length > 0
         query << "Columns:"
         @columns.each do |column|
@@ -72,7 +106,13 @@ class Nagios::MkLiveStatus::Query
       
       if @filters != nil and @filters.length > 0
         @filters.each do |filter|
-          query << "Filter: "+filter+"\n"
+          query << filter.to_s+"\n"
+        end
+      end
+      
+      if @stats != nil and @stats.length > 0
+        @stats.each do |stat|
+          query << stat.to_s+"\n"
         end
       end
     end
