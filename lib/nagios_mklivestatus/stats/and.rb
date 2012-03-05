@@ -1,25 +1,25 @@
-# This class is used to make a logical "AND" operator between two filter expression
+# This class is used to make a logical "AND" operator between two stats expression
 #
-# If one of the filter expression is also an "AND", 
+# If one of the stats expression is also an "AND", 
 # it takes all the expressions of the operator as its own.
 #
 # Author::    Esco-lan Team  (mailto:team@esco-lan.org)
 # Copyright:: Copyright (c) 2012 GIP RECIA
 # License::   General Public Licence
-class Nagios::MkLiveStatus::Filter::And < Nagios::MkLiveStatus::Filter
+class Nagios::MkLiveStatus::Stats::And < Nagios::MkLiveStatus::Stats
   
   #
   # Create a new "AND" operator between left and right expressions.
   #
-  # Those expressions must be of type Nagios::MkLiveStatus::Filter
+  # Those expressions must be of type Nagios::MkLiveStatus::Stats
   #
   def initialize(left_expr, right_expr)
-    if not left_expr.is_a? Nagios::MkLiveStatus::Filter or not right_expr.is_a? Nagios::MkLiveStatus::Filter
-      raise QueryException.new("The left and the right operand for an AND expression must be of Class Nagios::MkLiveStatus::Filter")
+    if not left_expr.is_a? Nagios::MkLiveStatus::Stats or not right_expr.is_a? Nagios::MkLiveStatus::Stats
+      raise QueryException.new("The left and the right operand for an AND expression must be of Class Nagios::MkLiveStatus::Stats")
     end
     
     @expressions = Array.new
-    if left_expr.is_a? Nagios::MkLiveStatus::Filter::And
+    if left_expr.is_a? Nagios::MkLiveStatus::Stats::And
       left_expr.get_expressions.each do |expr|
         @expressions.push expr
       end
@@ -27,7 +27,7 @@ class Nagios::MkLiveStatus::Filter::And < Nagios::MkLiveStatus::Filter
       @expressions.push left_expr
     end
     
-    if right_expr.is_a? Nagios::MkLiveStatus::Filter::And
+    if right_expr.is_a? Nagios::MkLiveStatus::Stats::And
       right_expr.get_expressions.each do |expr|
         @expressions.push expr
       end
@@ -47,16 +47,16 @@ class Nagios::MkLiveStatus::Filter::And < Nagios::MkLiveStatus::Filter
   
   #
   # Convert the current "AND" expression into a nagios query string
-  #  Filter: ...
-  #  Filter: ...
-  #  And: 2
+  #  Stats: ...
+  #  Stats: ...
+  #  StatsAnd: 2
   #
   def to_s
     and_arr = []
     @expressions.each do |expr|
       and_arr.push expr.to_s
     end
-    and_arr.push "And: #{@expressions.length}"
+    and_arr.push "StatsAnd: #{@expressions.length}"
     return and_arr.join("\n")
   end
 end

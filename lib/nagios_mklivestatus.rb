@@ -14,7 +14,7 @@ module Nagios
   # License::   General Public Licence
   module MkLiveStatus
 
-    require File.dirname(__FILE__)+'/nagios_mklivestatus/exception'    
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/exception/query_exception'    
     require File.dirname(__FILE__)+'/nagios_mklivestatus/query'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/filter'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/request'

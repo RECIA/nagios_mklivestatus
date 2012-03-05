@@ -1,3 +1,9 @@
+##
+# Request manager of the Nagios MkLivestatus
+#
+# Author::    Esco-lan Team  (mailto:team@esco-lan.org)
+# Copyright:: Copyright (c) 2012 GIP RECIA
+# License::   General Public Licence
 class Nagios::MkLiveStatus::Request
   
   require 'socket'
