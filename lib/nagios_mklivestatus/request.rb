@@ -82,7 +82,7 @@ class Nagios::MkLiveStatus::Request
     puts "" if Nagios::MkLiveStatus::DEBUG
     
     #if socket is generated and query exists
-    if query != nil and query.to_s.upcase.start_with?("GET ")
+    if query != nil and query.is_a? Nagios::MkLiveStatus::Query and query.to_s.upcase.start_with?("GET ")
       
       strQuery = "#{query}"
       #the endline must be empty
