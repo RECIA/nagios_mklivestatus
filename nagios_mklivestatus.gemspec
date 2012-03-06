@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/RECIA/nagios_mklivestatus"
   s.platform = Gem::Platform::RUBY
   s.summary = "Querying Nagios MKLiveStatus through sockets TCP or Unix"
-  s.files = ["lib/nagios_mklivestatus.rb", "lib/nagios_mklivestatus/query.rb"]
+  s.files = Dir['lib/**/*.rb']
   s.require_path = "lib"
-  s.extra_rdoc_files = ["README"]
+  s.extra_rdoc_files = ["README","RELEASE"]
 end
