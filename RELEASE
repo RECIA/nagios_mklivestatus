@@ -10,3 +10,4 @@
 * include advanced query filtering
 * include advanced count/group (stats)
 * include exception management
+* include query parser

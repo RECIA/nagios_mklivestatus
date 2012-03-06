@@ -11,6 +11,8 @@
 # License::   General Public Licence
 class Nagios::MkLiveStatus::Query
   
+  include Nagios::MkLiveStatus
+  
   @get=nil
   @columns=nil
   @filters=nil
@@ -65,19 +67,6 @@ class Nagios::MkLiveStatus::Query
     end
   end
   
-  # Add a group by
-  def addStats(expression)
-    if expression.is_a? Nagios::MkLiveStatus::Stats
-      if @groups == nil
-        @groups=Array.new
-      end
-      
-      @groups.push(expression)
-    else
-      raise QueryException.new("The filter must be a stat expression.")
-    end
-  end
-  
   #short cut to the method to_socket
   def to_s
     return to_socket
@@ -90,9 +79,9 @@ class Nagios::MkLiveStatus::Query
     if @get != nil
       query << "GET "+@get+"\n"
       
-      if @groups != nil and @groups.length > 0
-        @groups.each do |group|
-          query << group.to_s+"\n"
+      if @stats != nil and @stats.length > 0
+        @stats.each do |stat|
+          query << stat.to_s+"\n"
         end
       end
       
@@ -110,11 +99,6 @@ class Nagios::MkLiveStatus::Query
         end
       end
       
-      if @stats != nil and @stats.length > 0
-        @stats.each do |stat|
-          query << stat.to_s+"\n"
-        end
-      end
     end
     
     return query

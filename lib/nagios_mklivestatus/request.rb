@@ -7,15 +7,14 @@
 class Nagios::MkLiveStatus::Request
   
   require 'socket'
+  
+  include Nagios::MkLiveStatus
     
   # path informations of nagios sockets
   @mk_livestatus_socket_path=""
   
   # type of the socket
   @mk_livestatus_socket_type=""
-  
-  #debug mode : default to false
-  @debug = false
   
   #user mode : default nil
   @user = nil
@@ -30,16 +29,10 @@ class Nagios::MkLiveStatus::Request
   # * File : where path is the path to the file
   #
   # The second parameter is a hash of options of MkLiveStatus :
-  # * :debug : will activate or not the debugging (true or false) 
   # * :user : is the user used with AuthUser of MkLiveStatus for hosts, services, hostgroups, servicegroup and log
   # * :column_headers : set to true to have the headers of the query as first line
   # 
-  def initialize(path,options={:debug=> false})
-    
-    #set debug mode
-    if options.has_key? :debug and options[:debug]
-      @debug = true
-    end
+  def initialize(path,options={})
     
     #set debug mode
     if options.has_key? :column_headers and options[:column_headers]
@@ -61,16 +54,16 @@ class Nagios::MkLiveStatus::Request
       @mk_livestatus_socket_path[:ip] = table[0]
       @mk_livestatus_socket_path[:port] = table[2]
       
-      puts "type : "+@mk_livestatus_socket_type if @debug
-      puts "ip : "+@mk_livestatus_socket_path[:ip] if @debug
-      puts "port : "+@mk_livestatus_socket_path[:port] if @debug
+      puts "type : "+@mk_livestatus_socket_type if Nagios::MkLiveStatus::DEBUG
+      puts "ip : "+@mk_livestatus_socket_path[:ip] if Nagios::MkLiveStatus::DEBUG
+      puts "port : "+@mk_livestatus_socket_path[:port] if Nagios::MkLiveStatus::DEBUG
     # default socket type is set to file
     elsif File.exists? path
       @mk_livestatus_socket_path = path
       @mk_livestatus_socket_type = "file"
       
-      puts "type : "+@mk_livestatus_socket_type if @debug
-      puts "file : "+@mk_livestatus_socket_path if @debug
+      puts "type : "+@mk_livestatus_socket_type if Nagios::MkLiveStatus::DEBUG
+      puts "file : "+@mk_livestatus_socket_path if Nagios::MkLiveStatus::DEBUG
     end
   end
   
@@ -86,21 +79,10 @@ class Nagios::MkLiveStatus::Request
   #
   def query(query=nil)
    
-    socket=nil
-    
-    puts ""
-    #open socket depending on the type of connection
-    case @mk_livestatus_socket_type
-      when "tcp"
-        socket=TCPSocket.open(@mk_livestatus_socket_path[:ip], @mk_livestatus_socket_path[:port])
-        puts "Ouverture du socket TCP : "+@mk_livestatus_socket_path[:ip]+" "+@mk_livestatus_socket_path[:port] if @debug
-      when "file"
-        socket=UNIXSocket.open(@mk_livestatus_socket_path)
-        puts "Ouverture du socket Unix : "+@mk_livestatus_socket_path if @debug
-    end
+    puts "" if Nagios::MkLiveStatus::DEBUG
     
     #if socket is generated and query exists
-    if socket != nil and query != nil and query.to_s.upcase.start_with?("GET ")
+    if query != nil and query.to_s.upcase.start_with?("GET ")
       
       strQuery = "#{query}"
       #the endline must be empty
@@ -118,13 +100,15 @@ class Nagios::MkLiveStatus::Request
         strQuery << "ColumnHeaders: on\n"
       end
       
-      puts ""
-      puts "---" if @debug
-      puts strQuery if @debug
-      puts "---" if @debug
+      puts "" if Nagios::MkLiveStatus::DEBUG
+      puts "---" if Nagios::MkLiveStatus::DEBUG
+      puts strQuery if Nagios::MkLiveStatus::DEBUG
+      puts "---" if Nagios::MkLiveStatus::DEBUG
       
       #get error message if some are given
       strQuery << "ResponseHeader: fixed16\n"
+      
+      socket = open_socket()
       
       # query the socket
       socket.puts strQuery
@@ -138,20 +122,20 @@ class Nagios::MkLiveStatus::Request
       
       # get all the line of the socket
       response = ""
-        while(line = socket.gets) do
-          response << line
-        end
-        
-        puts response if @debug
-        
-        return response
-        
+      while(line = socket.gets) do
+        response << line
       end
+      
+      puts response if Nagios::MkLiveStatus::DEBUG
+      
+      return response
       
     end
     
+  end
+    
 private
-    # Check if the recived datas have a status code greater than 200.
+  # Check if the recived datas have a status code greater than 200.
   # If the case is matched then we raise an exception in order to stop the process
   #
   # datas : from socket.recv
@@ -160,6 +144,31 @@ private
     if error_code > 200
       raise RequestException, "query had returned an error_code #{error_code} : #{datas.split("\n")[1]}"
     end
+  end
+  
+  def open_socket()
+    
+    socket = nil
+    
+    begin
+      #open socket depending on the type of connection
+      case @mk_livestatus_socket_type
+        when "tcp"
+          socket=TCPSocket.open(@mk_livestatus_socket_path[:ip], @mk_livestatus_socket_path[:port])
+          puts "Ouverture du socket TCP : "+@mk_livestatus_socket_path[:ip]+" "+@mk_livestatus_socket_path[:port] if Nagios::MkLiveStatus::DEBUG
+        when "file"
+          socket=UNIXSocket.open(@mk_livestatus_socket_path)
+          puts "Ouverture du socket Unix : "+@mk_livestatus_socket_path if Nagios::MkLiveStatus::DEBUG
+      end
+    rescue Exception => ex
+      raise RequestException.new("Socket error : #{ex.message}")
+    end
+    
+    if socket == nil
+      raise RequestException.new("Socket error : socket type not recognized.")
+    end
+    
+    return socket
   end
   
 end

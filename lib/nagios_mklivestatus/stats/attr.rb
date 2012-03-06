@@ -6,6 +6,8 @@
 # License::   General Public Licence
 class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
   
+  include Nagios::MkLiveStatus
+  
   # equal or empty list : =
   EQUAL = "="
   
@@ -73,14 +75,14 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
   # [attr_value] the value to compare to
   # [attr_mod] deviation of the predicate like avg, max, min
   #
-  def initialize (attr_name, attr_comp, attr_value, attr_mod=nil)
+  def initialize (attr_name, attr_comp=nil, attr_value=nil, attr_mod=nil)
     
     list_comparator = [Attr::EQUAL, Attr::SUBSTR, Attr::EQUAL_IGNCASE , Attr::SUBSTR_IGNCASE, 
       Attr::LESSER, Attr::GREATER, Attr::LESSER_EQUAL, Attr::GREATER_EQUAL, 
       Attr::NOT_EQUAL, Attr::NOT_SUBSTR, Attr::NOT_EQUAL_IGNCASE, Attr::NOT_SUBSTR_IGNCASE]
       
-    list_deviation = [Attr::SUM, Attr::SUMINV, Attr::MIN , Attr::MAX, 
-      Attr::LESSER, Attr::AVG, Attr::AVGINV, Attr::STD]
+    list_deviation = [Attr::SUM, Attr::SUMINV, Attr::MIN, 
+      Attr::MAX, Attr::AVG, Attr::AVGINV, Attr::STD]
     
     if attr_name == nil or attr_name.empty?
       raise QueryException.new("The name of the attribute must be set in order to create the stats")
@@ -88,19 +90,26 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
       @attr_name = attr_name
     end
     
-    if attr_mod != nil and list_deviation.index(attr_mod)
-      raise QueryException.new("The deviantion of the attribute must be set to one of : #{list_deviation.join(", ")} in order to create the stats")
-    else
-      @attr_mod = attr_mod
-    end
+    if attr_comp == nil and attr_value == nil and attr_mod != nil and not attr_mod.empty? 
     
-    if list_comparator.index(attr_comp) == nil and not @attr_mod
-      raise QueryException.new("The comparator \"#{attr_comp}\" is not recognized.\n Please use one of : #{list_comparator.join(", ")}")
-    else
-      @attr_comp = attr_comp
-    end
+      if list_deviation.index(attr_mod) == nil
+        raise QueryException.new("The deviation #{attr_mod} of the attribute must be set to one of : #{list_deviation.join(", ")} in order to create the stats")
+      else
+        @attr_mod = attr_mod
+      end
+      
+    elsif attr_comp != nil and attr_value != nil and attr_mod == nil
     
-    @attr_value = attr_value
+      if list_comparator.index(attr_comp) == nil
+        raise QueryException.new("The comparator \"#{attr_comp}\" is not recognized.\n Please use one of : #{list_comparator.join(", ")}")
+      else
+        @attr_comp = attr_comp
+      end
+    
+      @attr_value = attr_value
+    else
+      raise QueryException.new("The stats can't have both deviation and comparator")
+    end
     
   end
   
@@ -120,13 +129,14 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
     end
     
     if (@attr_comp == nil or @attr_comp.empty?) and @attr_mod == nil
-      raise QueryException.new("The stats cannot be converted into string because the comparator of the attribute is not set.")
+      raise QueryException.new("The stats cannot be converted into string because the comparator of the attribute and the deviation are not set.")
     end
     
     stats = "Stats: "
     
     if @attr_mod != nil
-      stats+=@attr_mod+" "
+      stats+=@attr_mod+" "+@attr_name
+      return stats
     end
     
     if @attr_value == nil or @attr_value.empty?

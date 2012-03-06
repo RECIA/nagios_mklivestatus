@@ -6,6 +6,8 @@
 # License::   General Public Licence
 class Nagios::MkLiveStatus::Filter::Attr < Nagios::MkLiveStatus::Filter
   
+  include Nagios::MkLiveStatus
+  
   # equal filter or empty list : =
   EQUAL = "="
   

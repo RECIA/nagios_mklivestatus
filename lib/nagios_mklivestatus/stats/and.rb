@@ -8,6 +8,8 @@
 # License::   General Public Licence
 class Nagios::MkLiveStatus::Stats::And < Nagios::MkLiveStatus::Stats
   
+  include Nagios::MkLiveStatus
+  
   #
   # Create a new "AND" operator between left and right expressions.
   #

@@ -8,6 +8,8 @@
 # License::   General Public Licence
 class Nagios::MkLiveStatus::Stats::Or < Nagios::MkLiveStatus::Stats
   
+  include Nagios::MkLiveStatus
+  
   #
   # Create a new "OR" operator between left and right expressions.
   #

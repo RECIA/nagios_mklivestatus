@@ -4,7 +4,7 @@
 # Copyright:: Copyright (c) 2011 GIP RECIA
 # License::   General Public Licence
 module Nagios
-  # This class is used to create and querying a socket
+  # This class is used to create a request
   # It accepts the following socket:
   # * TCP : new("tcp://<host>:<port>")
   # * Unix : new("/var/lib/nagios/rw/live") 
@@ -14,25 +14,39 @@ module Nagios
   # License::   General Public Licence
   module MkLiveStatus
 
-    require File.dirname(__FILE__)+'/nagios_mklivestatus/exception/query_exception'    
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/exception/query_exception'
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/exception/request_exception'    
     require File.dirname(__FILE__)+'/nagios_mklivestatus/query'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/filter'
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/stats'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/request'
-  
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/parser'
+    
     # Initialize the nagios mklivestatus socket informations.
     #
-    # Two type of socket are supported for now:
-    # * TCP : path equal to "tcp://<host>:<port>"
-    # * File : where path is the path to the file
-    #
-    # The second parameter is a hash of options of MkLiveStatus :
+    # The parameter is a hash of options of MkLiveStatus :
     # * :debug : will activate or not the debugging (true or false) 
-    # * :user : is the user used with AuthUser of MkLiveStatus for hosts, services, hostgroups, servicegroup and log
-    # * :column_headers : set to true to have the headers of the query as first line
     # 
-    def prepare_request(path,options={:debug=> false})
-      Request.new(path, options)
-    end 
+    def self.init(options={:debug=> false})
+      self.set_debug_mode(options)
+    end
+    
+    #
+    # define the debug mode if it's not already defined
+    #
+    def self.set_debug_mode(options)
 
+      #if not already defined
+      if not Nagios::MkLiveStatus.const_defined?(:DEBUG, false)
+        #set debug mode
+        if options.has_key? :debug and options[:debug]
+          Nagios::MkLiveStatus.const_set(:DEBUG, true)
+        else
+          Nagios::MkLiveStatus.const_set(:DEBUG, false)
+        end
+      end
+      
+    end
+    
   end
 end

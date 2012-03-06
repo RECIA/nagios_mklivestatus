@@ -5,6 +5,8 @@
 # License::   General Public Licence
 class Nagios::MkLiveStatus::Filter::Negate < Nagios::MkLiveStatus::Filter
   
+  include Nagios::MkLiveStatus
+  
   #
   # Create a new "Not" operator between left and right expressions.
   #

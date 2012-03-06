@@ -4,18 +4,51 @@ gem install nagios_maklivestatus
 
 To integrate it in your applications, it can be done just by adding the two following lines :
 
-require 'rubygems'
-require 'nagios_mklivestatus'
+ require 'rubygems'
+ require 'nagios_mklivestatus'
 
-And to query the mklivestatus :
+Creating a query can be made in two ways :
 
-mklivesocket = Nagios::MkLiveStatus.new(path)
-mklivesocket.query(mkliveQuery)
+ query = Nagios::MkLiveStatus::Query.new
+ query.get "hosts"
+ query.addColumn "host_name"
+ query.addColumn "groups"
+ query.addFilter "<filter_expr>"
+ query.addStats "<stat_expr>"
+ 
+Filter expressions are defined like this :
+ 
+ #both line are equals
+ filter1 = Nagios::MkLiveStatus::Filter::Attr("host_name", Nagios::MkLiveStatus::Filter::Attr::EQUAL, "<name>")
+ filter2 = Nagios::MkLiveStatus::Filter::Attr("host_name", "=", "<name>")
+ #filter and, or and negate
+ filter_and = Nagios::MkLiveStatus::Filter::And(filter1, filter2)
+ filter_or = Nagios::MkLiveStatus::Filter::Or(filter1, filter2)
+ filter_neg = Nagios::MkLiveStatus::Filter::Negate(filter2)
+ 
+Stats expression are defined the same way of the filter without the negate expression
+
+ #both line are equals
+ stats1 = Nagios::MkLiveStatus::Stats::Attr("host_name", Nagios::MkLiveStatus::Stats::Attr::EQUAL, "<name>", Nagios::MkLiveStatus::Stats::Attr::SUM)
+ stats2 = Nagios::MkLiveStatus::Stats::Attr("host_name", "=", "<name>","sum")
+ #filter and, or
+ stats_and = Nagios::MkLiveStatus::Stats::And(stats1, stats2)
+ stats_or = Nagios::MkLiveStatus::Stats::Or(stats1, stats2)
+ 
+Please refer to the corresponding class for more details on expressions.
+
+The second way is using the parser:
+
+ query_str = <nagios_query>
+ query Nagios::MkLiveStatus::Parser.parse(query_str) 
+
+Once you have the query you can send it to the Nagios MkLiveStatus Server
+
+ mklive_req = Nagios::MkLiveStatus::Request.new(path)
+ mklive_req.query(query)
 
 Please refer to the rdoc in order to have a complete description of each class.
 
 TODO:
-	- managing exceptions throws by the socket
-	- controlling livestatus query validity
-	- adding OR and AND query filter support
+	- advanced management for exceptions throws by the socket
 	- adding support to http

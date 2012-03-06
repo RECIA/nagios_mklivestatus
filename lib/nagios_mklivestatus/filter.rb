@@ -14,6 +14,8 @@
 # License::   General Public Licence
 class Nagios::MkLiveStatus::Filter
   
+  include Nagios::MkLiveStatus
+  
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "attr")
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "and")
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "or")
