@@ -39,7 +39,7 @@ module Nagios::MkLiveStatus::QueryHelper
   def nagmk_stats_from_str(stats_str)
     predicates = stats_str.strip.match(/^(Stats: )?(\S+) (\S+) ?(\S+)?$/)
     if predicates
-      if Deviation::get_all_deviations.include? predicates[2]
+      if get_all_deviations.include? predicates[2]
         return nagmk_stats(predicates[3], nil, nil, predicates[2])
       else
         return nagmk_stats(predicates[2], predicates[3], predicates[4])
