@@ -1,0 +1,180 @@
+= Description
+
+This gem provides support to \Nagios MkLiveStatus through an API.
+The library have the following functionality :
+
+* check query validity
+* parse query from string
+* create query
+* request mklivestatus with query
+
+See this {link}[http://mathias-kettner.de/checkmk_livestatus.html] for more detail about the MkLiveStatus.
+
+---
+
+= Installation
+
+In order to use the gem, you have to install it into your rubygem environment.
+
+ gem install nagios_maklivestatus
+
+To integrate it in your applications, it can be done just by adding the two following lines :
+
+ require 'rubygems'
+ require 'nagios_mklivestatus'
+
+Your reading to use the library
+
+---
+
+= Developper Guide
+
+== Logging System
+
+The logger use the default logger class of ruby : Logger.
+The logger can be initiate and changed through the same way:
+
+ require 'nagios_mklivestatus'
+ 
+ ## changing nagios logging
+ # options
+ log_opts = { #logger options used to override default options
+   :name => STDOUT, # name of the logger like in Logger.new(name)
+   :level => Logger::ERROR, # logger level  logger.level = Logger::ERROR
+   
+   # used if defined or not nil
+   :shift_age => nil, # shift age of the logger like in Logger.new(name, shift_age)
+   
+   # used if defined or not nil and if shift_age is defined
+   :shift_size => nil # shift size of the logger like in Logger.new(name, shift_age, shift_size)
+ }
+ # change log setting
+ Nagios::MkLiveStatus.init({:log=>log_opts})
+
+== Creating Query
+
+Creating a query can be made in multiples ways using :
+* API
+* Helper
+* Parser
+
+Next, we will show you how to use those methods to create query.
+
+=== API
+
+===== Query
+
+Look at the following code :
+
+ require 'nagios_mklivestatus'
+ 
+ ##
+ # create the query
+ #
+ query = Nagios::MkLiveStatus::Query.new 
+ 
+ # add GET hosts
+ query.get "hosts"
+ 
+ # add Columns: host_name groups
+ query.addColumn "host_name"
+ query.addColumn "groups"
+ 
+ # add Filter: (see below)
+ query.addFilter "<filter_expr>"
+ 
+ # add Stats: (see below)
+ query.addStats "<stat_expr>"
+ 
+Only the two first are required in order to create a correct MkLiveStatus Query.
+
+===== Filter
+ 
+The filter expression which can be added to query are defined like this :
+
+ require 'nagios_mklivestatus'
+  
+ #both line are equals
+ filter1 = Nagios::MkLiveStatus::Filter::Attr.new("host_name", Nagios::MkLiveStatus::Filter::Attr::EQUAL, "<name>")
+ filter2 = Nagios::MkLiveStatus::Filter::Attr.new("host_name", "=", "<name>")
+ 
+ #filter and, or and negate
+ filter_and = Nagios::MkLiveStatus::Filter::And.new(filter1, filter2)
+ filter_or = Nagios::MkLiveStatus::Filter::Or.new(filter1, filter2)
+ filter_neg = Nagios::MkLiveStatus::Filter::Negate.new(filter2)
+ 
+===== Stats
+ 
+The stats expression which can be added to the query are defined like this:
+
+ require 'nagios_mklivestatus'
+ 
+ #both line are equals: host_name = <name>
+ stats1 = Nagios::MkLiveStatus::Stats::Attr.new("host_name", Nagios::MkLiveStatus::Stats::Attr::EQUAL, "<name>")
+ stats2 = Nagios::MkLiveStatus::Stats::Attr.new("host_name", "=", "<name>")
+ 
+ #both line are equals Stats: sum host_name
+ stats1 = Nagios::MkLiveStatus::Stats::Attr.new("host_name", nil, nil, Nagios::MkLiveStatus::Stats::Attr::SUM)
+ stats2 = Nagios::MkLiveStatus::Stats::Attr.new("host_name", nil, nil,"sum")
+ 
+ #stats and, or
+ stats_and = Nagios::MkLiveStatus::Stats::And.new(stats1, stats2)
+ stats_or = Nagios::MkLiveStatus::Stats::Or.new(stats1, stats2)
+ 
+Please refer to the corresponding class for more details on expressions.
+
+=== Helper
+
+An helper exists containing the query, filter and stats creation. This helper also contains comparator operator and deviation in sub modules.
+
+ require 'nagios_mklivestatus'
+ include Nagios::MkLiveStatus::QueryHelper
+ 
+ # query helper : create a query
+ query = nagmk_query
+ 
+ query.get "host"
+ query.addColumn "host_name"
+ 
+ # query helper : create filter
+ filter = nagmk_filter("host_name", Comparator::EQUAL, "<name>")
+ query.addFilter filter
+ 
+ # query helper : create filter from string
+ filter = nagmk_filter_from_str("host_name = <name>")
+ 
+See the Nagios::MkLiveStatus::QueryHelper for more methods.
+
+=== Parser
+
+The Nagios::MkLiveStatus::Parser is a module that provides a string parser in order to create the query:
+
+ require 'nagios_mklivestatus'
+ include Nagios::MkLiveStatus::Parser
+
+ query_str = <nagios_query>
+ query = nagmk_parse(query_str)
+ 
+== Making Request
+
+Once you have the query you can send it to the Nagios MkLiveStatus Server using the Request Object
+
+ require 'nagios_mklivestatus'
+ 
+ ##
+ # creating request
+ # path can be tcp://<host>:<port> or <path>
+ mklive_req = Nagios::MkLiveStatus::Request.new(path)
+ 
+ ##
+ # common options:
+ # :limit : limit the number of results
+ # :output : output format
+ # :user : authenticated user
+ #
+ # see the class for more
+ results = mklive_req.query(query, options)
+
+=TODO:
+* advanced management for exceptions throws by the socket
+* adding support to http

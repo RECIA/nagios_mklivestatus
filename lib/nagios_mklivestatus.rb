@@ -39,7 +39,12 @@ module Nagios
     end
     
     # logger helper while including
+    # if called and logger not created it will initialize the default logger
     def logger
+      if Nagios::MkLiveStatus.logger
+        Nagios::MkLiveStatus.init
+      end
+      
       Nagios::MkLiveStatus.logger
     end
 

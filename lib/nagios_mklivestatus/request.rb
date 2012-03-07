@@ -22,10 +22,7 @@ class Nagios::MkLiveStatus::Request
   # * TCP : path equal to "tcp://<host>:<port>"
   # * File : where path is the path to the file
   #
-  # The second parameter is a hash of options for MkLiveStatus parameters. See Nagios::MkLiveStatus::init for more details.
-  # 
-  # 
-  def initialize(path,options=nil)
+  def initialize(path)
     
     Nagios::MkLiveStatus::init(options)
     

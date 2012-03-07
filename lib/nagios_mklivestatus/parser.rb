@@ -11,12 +11,8 @@ module Nagios::MkLiveStatus::Parser
   
   #
   # Parser method, takes the string and return a Nagios::MkLiveStatus::Query
-  # The second parameter is the options of the parser. Those are the same of 
-  # Nagios::MkLiveStatus::init
   #
-  def nagmk_parse(query_str, options={})
-    
-    Nagios::MkLiveStatus::init(options)
+  def nagmk_parse(query_str)
     
     if not query_str.is_a? String or query_str.empty?
       ex = QueryException.new("The query is not valid. You must provide a valid string.")
