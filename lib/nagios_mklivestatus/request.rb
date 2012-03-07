@@ -93,6 +93,11 @@ class Nagios::MkLiveStatus::Request
         raise ex
       end
     end
+    
+    columns=[]
+    if column_headers and query.has_stats
+      columns = query.get_columns_name
+    end
    
     #if socket is generated and query exists
     if query != nil and query.is_a? Nagios::MkLiveStatus::Query and query.to_s.upcase.start_with?("GET ")
@@ -152,10 +157,16 @@ class Nagios::MkLiveStatus::Request
       # get all the line of the socket
       response = socket.gets(nil)
       
+      if columns.length > 0
+        response = columns.join(";")+"\n"+response
+      end
+      
       logger.info("Results :")
       response.split("\n").each do |line|
         logger.info(line)
       end
+      
+      
       
       return response
       

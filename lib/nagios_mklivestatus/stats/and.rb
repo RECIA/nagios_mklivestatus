@@ -63,4 +63,17 @@ class Nagios::MkLiveStatus::Stats::And < Nagios::MkLiveStatus::Stats
     and_arr.push "StatsAnd: #{@expressions.length}"
     return and_arr.join("\n")
   end
+  
+  def to_column_name(has_parent=false)
+    and_arr = []
+    @expressions.each do |expr|
+      and_arr.push expr.to_column_name(true)
+    end
+    
+    column_name = and_arr.join(" and ") 
+    if has_parent
+      column_name = "( "+column_name+" )"
+    end
+    return column_name
+  end
 end

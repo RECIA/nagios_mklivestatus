@@ -107,4 +107,23 @@ class Nagios::MkLiveStatus::Query
     
     return query
   end
+  
+  def has_stats
+    @stats != nil and @stats.length > 0
+  end
+  
+  def get_columns_name
+    columns = @columns
+    if columns == nil
+      columns = []
+    end
+      
+    if @stats != nil and @stats.length > 0
+      @stats.each do |stat|
+        columns.push stat.to_column_name
+      end
+    end
+      
+    return columns
+  end
 end

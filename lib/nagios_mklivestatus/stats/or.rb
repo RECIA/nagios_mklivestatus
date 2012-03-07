@@ -63,4 +63,19 @@ class Nagios::MkLiveStatus::Stats::Or < Nagios::MkLiveStatus::Stats
     or_arr.push "StatsOr: #{@expressions.length}"
     return or_arr.join("\n")
   end
+  
+  def to_column_name(has_parent=false)
+    or_arr = []
+    @expressions.each do |expr|
+      or_arr.push expr.to_column_name(true)
+    end
+    
+    column_name = or_arr.join(" or ")
+     
+    if has_parent
+      column_name = "( "+column_name+" )"
+    end
+    
+    return column_name
+  end
 end

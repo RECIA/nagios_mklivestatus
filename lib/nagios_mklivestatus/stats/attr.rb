@@ -100,4 +100,28 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
     return stats+@attr_name+" "+@attr_comp+" "+@attr_value;
   end
   
+  def to_column_name(has_parent=false)
+    if @attr_name == nil or @attr_name.empty?
+      ex = QueryException.new("The stats cannot be converted into string because the name of the attribute is not set.")
+      logger.error(ex.message)
+      raise ex
+    end
+    
+    if (@attr_comp == nil or @attr_comp.empty?) and @attr_mod == nil
+      ex = QueryException.new("The stats cannot be converted into string because the comparator of the attribute and the deviation are not set.")
+      logger.error(ex.message)
+      raise ex
+    end
+    
+    if @attr_mod != nil
+      return @attr_mod+" "+@attr_name
+    end
+    
+    if @attr_value == nil or @attr_value.empty?
+      return @attr_name+" "+@attr_comp 
+    end
+    
+    return @attr_name+" "+@attr_comp+" "+@attr_value;
+  end
+  
 end
