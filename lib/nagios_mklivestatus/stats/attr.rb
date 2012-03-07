@@ -100,6 +100,8 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
     return stats+@attr_name+" "+@attr_comp+" "+@attr_value;
   end
   
+  # transform predicate to column name
+  # same as the to_s but without "Stats: " (ex: "state = 0")
   def to_column_name(has_parent=false)
     if @attr_name == nil or @attr_name.empty?
       ex = QueryException.new("The stats cannot be converted into string because the name of the attribute is not set.")

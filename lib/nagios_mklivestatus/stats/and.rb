@@ -64,6 +64,8 @@ class Nagios::MkLiveStatus::Stats::And < Nagios::MkLiveStatus::Stats
     return and_arr.join("\n")
   end
   
+  # transform predicate to column name
+  # "left and right" with brackets if children 
   def to_column_name(has_parent=false)
     and_arr = []
     @expressions.each do |expr|

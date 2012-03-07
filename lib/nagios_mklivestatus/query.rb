@@ -108,14 +108,22 @@ class Nagios::MkLiveStatus::Query
     return query
   end
   
+  #
+  # check if the query have stats predicates
+  #
   def has_stats
     @stats != nil and @stats.length > 0
   end
   
+  #
+  # get all the column name of the query
+  #
   def get_columns_name
-    columns = @columns
-    if columns == nil
-      columns = []
+    columns = []
+    if @columns != nil
+      @columns.each do |column|
+        columns.push column
+      end
     end
       
     if @stats != nil and @stats.length > 0

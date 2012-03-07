@@ -64,6 +64,8 @@ class Nagios::MkLiveStatus::Stats::Or < Nagios::MkLiveStatus::Stats
     return or_arr.join("\n")
   end
   
+  # transform predicate to column name
+  # "left or right" with brackets if children
   def to_column_name(has_parent=false)
     or_arr = []
     @expressions.each do |expr|

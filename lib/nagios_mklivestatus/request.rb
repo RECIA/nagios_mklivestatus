@@ -157,6 +157,7 @@ class Nagios::MkLiveStatus::Request
       # get all the line of the socket
       response = socket.gets(nil)
       
+      # if columns header are required but stats are defined > no column. So we put ours
       if columns.length > 0
         response = columns.join(";")+"\n"+response
       end
