@@ -11,3 +11,8 @@
 * include advanced count/group (stats)
 * include exception management
 * include query parser
+
+== 0.0.9
+* include query helper
+* include logging management
+* preparing release v1.0.0

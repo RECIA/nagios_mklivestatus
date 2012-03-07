@@ -7,42 +7,7 @@
 class Nagios::MkLiveStatus::Filter::Attr < Nagios::MkLiveStatus::Filter
   
   include Nagios::MkLiveStatus
-  
-  # equal filter or empty list : =
-  EQUAL = "="
-  
-  # regular expression like /<expr>/ : ~
-  SUBSTR = "~"
-  
-  # equal ignore case : =~
-  EQUAL_IGNCASE = "=~"
-  
-  # regular expression ignoring case : ~~
-  SUBSTR_IGNCASE = "~~"
-  
-  # less than in alphabetical order : <
-  LESSER = "<"
-  
-  # greater than in alphabetical order : >
-  GREATER = ">"
-  
-  # less or equal to in alphabetical order : <=  
-  LESSER_EQUAL = "<="
-  
-  # less or equal to in alphabetical order or list contains : >=
-  GREATER_EQUAL = ">="
-  
-  # not equals to : !=
-  NOT_EQUAL = "!="
-  
-  # not matching substring : !~
-  NOT_SUBSTR = "!~"
-  
-  # not equals to ignoring case : !=~
-  NOT_EQUAL_IGNCASE = "!=~"
-  
-  # not matching substring ignoring case : !~~
-  NOT_SUBSTR_IGNCASE = "!~~"
+  include Nagios::MkLiveStatus::QueryHelper::Comparator
   
   #
   # Create the unit predicate with the column name, the operator use to compare, and the value
@@ -52,18 +17,20 @@ class Nagios::MkLiveStatus::Filter::Attr < Nagios::MkLiveStatus::Filter
   #
   def initialize (attr_name, attr_comp, attr_value)
     
-    list_comparator = [Attr::EQUAL, Attr::SUBSTR, Attr::EQUAL_IGNCASE , Attr::SUBSTR_IGNCASE, 
-      Attr::LESSER, Attr::GREATER, Attr::LESSER_EQUAL, Attr::GREATER_EQUAL, 
-      Attr::NOT_EQUAL, Attr::NOT_SUBSTR, Attr::NOT_EQUAL_IGNCASE, Attr::NOT_SUBSTR_IGNCASE]
+    list_comparator = get_all_comparators
     
     if attr_name == nil or attr_name.empty?
-      raise QueryException.new("The name of the attribute must be set in order to create the filter")
+      ex = QueryException.new("The name of the attribute must be set in order to create the filter")
+      logger.error(ex.message)
+      raise ex
     else
       @attr_name = attr_name
     end
     
     if list_comparator.index(attr_comp) == nil
-      raise QueryException.new("The comparator \"#{attr_comp}\" is not recognized.\n Please use one of : #{list_comparator.join(", ")}")
+      ex = QueryException.new("The comparator \"#{attr_comp}\" is not recognized.\n Please use one of : #{list_comparator.join(", ")}")
+      logger.error(ex.message)
+      raise ex
     else
       @attr_comp = attr_comp
     end
@@ -83,13 +50,16 @@ class Nagios::MkLiveStatus::Filter::Attr < Nagios::MkLiveStatus::Filter
   #
   def to_s
     if @attr_name == nil or @attr_name.empty?
-      raise QueryException.new("The stats cannot be converted into string because the name of the attribute is not set.")
+      ex = QueryException.new("The stats cannot be converted into string because the name of the attribute is not set.")
+      logger.error(ex.message)
+      raise ex
     end
     
     if @attr_comp == nil or @attr_comp.empty?
-      raise QueryException.new("The stats cannot be converted into string because the comparator of the attribute is not set.")
+      ex = QueryException.new("The stats cannot be converted into string because the comparator of the attribute is not set.")
+      logger.error(ex.message)
+      raise ex
     end
-    
     
     if @attr_value == nil or @attr_value.empty?
       return "Filter: "+@attr_name+" "+@attr_comp 

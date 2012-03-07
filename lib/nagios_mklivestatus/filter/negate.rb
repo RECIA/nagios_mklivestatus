@@ -14,7 +14,9 @@ class Nagios::MkLiveStatus::Filter::Negate < Nagios::MkLiveStatus::Filter
   #
   def initialize(expr)
     if not expr.is_a? Nagios::MkLiveStatus::Filter
-      raise QueryException.new("The operand for a NEGATE expression must be of Class Nagios::MkLiveStatus::Filter")
+      ex = QueryException.new("The operand for a NEGATE expression must be of Class Nagios::MkLiveStatus::Filter")
+      logger.error(ex.message)
+      raise ex
     end
     
     @expression = expr

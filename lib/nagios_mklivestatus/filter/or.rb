@@ -17,7 +17,9 @@ class Nagios::MkLiveStatus::Filter::Or < Nagios::MkLiveStatus::Filter
   #
   def initialize(left_expr, right_expr)
     if not left_expr.is_a? Nagios::MkLiveStatus::Filter or not right_expr.is_a? Nagios::MkLiveStatus::Filter
-      raise QueryException.new("The left and the right operand for an OR expression must be of Class Nagios::MkLiveStatus::Filter")
+      ex = QueryException.new("The left and the right operand for an OR expression must be of Class Nagios::MkLiveStatus::Filter")
+      logger.error(ex.message)
+      raise ex
     end
     
     @expressions = Array.new

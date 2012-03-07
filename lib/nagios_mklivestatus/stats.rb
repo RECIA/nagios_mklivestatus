@@ -13,25 +13,8 @@
 # License::   General Public Licence
 class Nagios::MkLiveStatus::Stats
   
-  include Nagios::MkLiveStatus
-  
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "attr")
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "and")
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "or")
-  
-  # shortcut to Stats::Attr.new
-  def self.Attr(name, comp=nil, value=nil, mod=nil)
-    Attr.new(name, comp, value, mod)
-  end
-  
-  # shortcut to Stats::And.new
-  def self.And(left_expr, right_expr)
-    And.new(left_expr, right_expr)
-  end
-  
-  # shortcut to Stats::Or.new
-  def self.Or(left_expr, right_expr)
-    Or.new(left_expr, right_expr)
-  end
   
 end

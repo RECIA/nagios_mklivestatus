@@ -50,7 +50,9 @@ class Nagios::MkLiveStatus::Query
       
       @filters.push(expression)
     else
-      raise QueryException.new("The filter must be a filter expression.")
+      ex = QueryException.new("The filter must be a filter expression.")
+      logger.error(ex.message)
+      raise ex
     end
   end
   
@@ -63,7 +65,9 @@ class Nagios::MkLiveStatus::Query
       
       @stats.push(expression)
     else
-      raise QueryException.new("The filter must be a stat expression.")
+      ex = QueryException.new("The filter must be a stat expression.")
+      logger.error(ex.message)
+      raise ex
     end
   end
   

@@ -35,12 +35,13 @@ Stats expression are defined the same way of the filter without the negate expre
  stats_and = Nagios::MkLiveStatus::Stats::And(stats1, stats2)
  stats_or = Nagios::MkLiveStatus::Stats::Or(stats1, stats2)
  
-Please refer to the corresponding class for more details on expressions.
+Please refer to the corresponding class for more details on expressions. An helper exists containing the query, filter and stats creation. This helper also contains comparator operator and deviation in sub modules.
 
 The second way is using the parser:
 
  query_str = <nagios_query>
- query Nagios::MkLiveStatus::Parser.parse(query_str) 
+ include Nagios::MkLiveStatus::Parser
+ query = nagmk_parse(query_str) 
 
 Once you have the query you can send it to the Nagios MkLiveStatus Server
 

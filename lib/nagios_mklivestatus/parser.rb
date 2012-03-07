@@ -7,20 +7,24 @@
 module Nagios::MkLiveStatus::Parser
   
   include Nagios::MkLiveStatus
+  include Nagios::MkLiveStatus::QueryHelper
+  
   #
   # Parser method, takes the string and return a Nagios::MkLiveStatus::Query
   # The second parameter is the options of the parser. Those are the same of 
   # Nagios::MkLiveStatus::init
   #
-  def self.parse(query_str, options={:debug=>false})
+  def nagmk_parse(query_str, options={})
     
     Nagios::MkLiveStatus::init(options)
     
     if not query_str.is_a? String or query_str.empty?
-      raise QueryException.new("The query is not valid. You must provide a valid string.")
+      ex = QueryException.new("The query is not valid. You must provide a valid string.")
+      logger.error(ex.message)
+      raise ex
     end
     
-    query = Nagios::MkLiveStatus::Query.new
+    query = nagmk_query()
     
     #split all the lines in order to create a table of string commands
     commands = query_str.split("\n")
@@ -28,7 +32,9 @@ module Nagios::MkLiveStatus::Parser
     # the first line is the GET of the query
     get = commands.shift.strip.match(/^GET (.*)$/)
     if get == nil
-      raise QueryException.new("The query has no GET. The first line must match /^GET (.*)$/.")
+      ex = QueryException.new("The query has no GET. The first line must match /^GET (.*)$/.")
+      logger.error(ex.message)
+      raise ex
     else
       query.get get[1]
     end
@@ -40,20 +46,24 @@ module Nagios::MkLiveStatus::Parser
     
     commands.each do |command|
       command.strip!
-      puts "> processing command \"#{command}\"" if Nagios::MkLiveStatus::DEBUG
+      logger.debug("> processing command \"#{command}\"")
       
       if command.match(/^Columns: /)
         if not columns_parsed
-          puts ">> columns found \"#{command.match(/^Columns: (.*)$/)[1]}\"" if Nagios::MkLiveStatus::DEBUG
+          logger.debug(">> columns found \"#{command.match(/^Columns: (.*)$/)[1]}\"")
           columns = command.match(/^Columns: (.*)$/)[1].split(" ")
           columns_parsed = true
         else
-          raise QueryException.new("The definitions of columns are encountered twice.")
+          ex = QueryException.new("The definitions of columns are encountered twice. Or after the Filter predicates.")
+          logger.error(ex.message)
+          raise ex
         end
       elsif command.match(/^Stats(And|Or)?: /)
         
         if columns_parsed
-          raise QueryException.new("The stats predicates must be defined before Columns : #{command}")
+          ex = QueryException.new("The stats predicates must be defined before Columns : #{command}")
+          logger.error(ex.message)
+          raise ex
         end
         
         stats_dispatching(command, stats)
@@ -61,13 +71,15 @@ module Nagios::MkLiveStatus::Parser
       elsif command.match(/^(Filter: |And: |Or: |Negate:)/)
         
         if not columns_parsed
-          raise QueryException.new("The filters predicates must be defined after Columns : #{command}")
+          columns_parsed = true
         end
         
         filter_dispatching(command, filters)
         
       elsif not command.empty?
-        raise QueryException.new("The current query is not valid due to : #{command}")
+        ex = QueryException.new("The current query is not valid due to : #{command}")
+        logger.error(ex.message)
+        raise ex
       end
       
     end
@@ -88,97 +100,65 @@ module Nagios::MkLiveStatus::Parser
   end
   
 private
-  def self.stats_dispatching(command, stats=[])
+  def stats_dispatching(command, stats=[])
     if command.match(/^Stats: /)
       
-      predicates = command.match(/^Stats: ((\S+)\s(\S+)|(\S+) (\S+)\s?(\S+)?)$/)
-      
-      if predicates and predicates[4] and predicates[5]
-        name = predicates[4]
-        comp = predicates[5]
-        value = predicates[6]
-        puts ">> stats predicate found \"#{name} #{comp} #{value}\"" if Nagios::MkLiveStatus::DEBUG
-      
-        stat = Stats.Attr(name, comp, value, nil)
-        stats.push(stat)
-      elsif predicates and predicates[2] and predicates[3]
-        deviation = predicates[2]
-        name = predicates[3]
-        puts ">> stats predicate found \"#{deviation} #{name}\"" if Nagios::MkLiveStatus::DEBUG
-      
-        stat = Stats.Attr(name, nil, nil, deviation)
-        stats.push(stat)
-      else
-        raise QueryException.new("The stats predicate can't be parsed : #{command}")
-      end
+      stats.push nagmk_stats_from_str(command)
       
     elsif command.match(/^StatsAnd: /)
       number = command.match(/^StatsAnd: (\d)$/)[1].to_i
       if number <= 1
-        raise QueryException.new("The StatAnd predicate must be above 1.")
+        ex = QueryException.new("The StatAnd predicate must be above 1.")
+        logger.error(ex.message)
+        raise ex
       end
       
       (number-1).times do |idx|
-        right_stat = stats.pop
-        left_stat = stats.pop
-        andStats = Stats::And(left_stat, right_stat)
-        stats.push(andStats)
+        stats.push nagmk_stats_and(stats.pop, stats.pop)
       end
     elsif command.match(/^StatsOr: /)
       number = command.match(/^StatsOr: (\d)$/)[1].to_i
       if number <= 1
-        raise QueryException.new("The StatOr predicate must be above 1.")
+        ex = QueryException.new("The StatOr predicate must be above 1.")
+        logger.error(ex.message)
+        raise ex
       end
       
       (number-1).times do |idx|
-        right_stat = stats.pop
-        left_stat = stats.pop
-        orStats = Stats::Or(left_stat, right_stat)
-        stats.push(orStats)
+        stats.push nagmk_stats_or(stats.pop, stats.pop)
       end
     end
   end
   
-  def self.filter_dispatching(command, filters=[])
+  def filter_dispatching(command, filters=[])
     if command.match(/^Filter: /)
-      predicates = command.match(/^Filter: (\S+) (\S+)\s?(\S+)?$/)
       
-      name = predicates[1]
-      comp = predicates[2]
-      value = predicates[3]
+      filters.push nagmk_filter_from_str(command)
       
-      puts ">> filter predicate found \"#{name} #{comp} #{value}\"" if Nagios::MkLiveStatus::DEBUG
-      
-      filter = Filter::Attr(name, comp, value)
-      filters.push(filter)
     elsif command.match(/^And: /)
       number = command.match(/^And: (\d)$/)[1].to_i
       if number <= 1
-        raise QueryException.new("The And predicate must be above 1.")
+        ex = QueryException.new("The And predicate must be above 1.")
+        logger.error(ex.message)
+        raise ex
       end
       
       (number-1).times do |idx|
-        right_filter = filters.pop
-        left_filter = filters.pop
-        andFilter = Filter::And(left_filter, right_filter)
-        filters.push(andFilter)
+        filters.push nagmk_and(filters.pop, filters.pop)
       end
     elsif command.match(/^Or: /)
       number = command.match(/^Or: (\d)$/)[1].to_i
       if number <= 1
-        raise QueryException.new("The Or predicate must be above 1.")
+        ex = QueryException.new("The Or predicate must be above 1.")
+        logger.error(ex.message)
+        raise ex
       end
       
       (number-1).times do |idx|
-        right_filter = filters.pop
-        left_filter = filters.pop
-        orFilter = Filter::Or(left_filter, right_filter)
-        filters.push(orFilter)
+        filters.push nagmk_or(filters.pop, filters.pop)
       end
     elsif command.match(/^Negate:/)
-      filter = filters.pop
-      negateFilter = Filter::Negate(filter)
-      filters.push(negateFilter)
+      filters.push nagmk_negate(filters.pop)
     end
   end
 end

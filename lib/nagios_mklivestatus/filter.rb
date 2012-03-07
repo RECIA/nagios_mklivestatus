@@ -14,31 +14,9 @@
 # License::   General Public Licence
 class Nagios::MkLiveStatus::Filter
   
-  include Nagios::MkLiveStatus
-  
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "attr")
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "and")
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "or")
   require File.join(File.dirname(__FILE__), File.basename(__FILE__, ".rb"), "negate")
-  
-  # shortcut to Filter::Attr.new
-  def self.Attr(name, comp, value)
-    Attr.new(name, comp, value)
-  end
-  
-  # shortcut to Filter::And.new
-  def self.And(left_expr, right_expr)
-    And.new(left_expr, right_expr)
-  end
-  
-  # shortcut to Filter::Or.new
-  def self.Or(left_expr, right_expr)
-    Or.new(left_expr, right_expr)
-  end
-  
-  # shortcut to Filter::Negate.new
-  def self.Negate(expr)
-    Negate.new(expr)
-  end
   
 end

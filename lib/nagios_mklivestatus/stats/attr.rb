@@ -7,63 +7,8 @@
 class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
   
   include Nagios::MkLiveStatus
-  
-  # equal or empty list : =
-  EQUAL = "="
-  
-  # regular expression like /<expr>/ : ~
-  SUBSTR = "~"
-  
-  # equal ignore case : =~
-  EQUAL_IGNCASE = "=~"
-  
-  # regular expression ignoring case : ~~
-  SUBSTR_IGNCASE = "~~"
-  
-  # less than in alphabetical order : <
-  LESSER = "<"
-  
-  # greater than in alphabetical order : >
-  GREATER = ">"
-  
-  # less or equal to in alphabetical order : <=  
-  LESSER_EQUAL = "<="
-  
-  # less or equal to in alphabetical order or list contains : >=
-  GREATER_EQUAL = ">="
-  
-  # not equals to : !=
-  NOT_EQUAL = "!="
-  
-  # not matching substring : !~
-  NOT_SUBSTR = "!~"
-  
-  # not equals to ignoring case : !=~
-  NOT_EQUAL_IGNCASE = "!=~"
-  
-  # not matching substring ignoring case : !~~
-  NOT_SUBSTR_IGNCASE = "!~~"
-  
-  # sum deviation
-  SUM = "sum"
-  
-  # suminv deviation
-  SUMINV = "suminv"
-  
-  # min deviation
-  MIN = "min"
-  
-  # max deviation
-  MAX = "max"
-  
-  # avg deviation
-  AVG = "avg"
-  
-  # avginv deviation
-  AVGINV = "avginv"
-  
-  # std deviation
-  STD = "std"
+  include Nagios::MkLiveStatus::QueryHelper::Comparator
+  include Nagios::MkLiveStatus::QueryHelper::Deviation
   
   
   #
@@ -77,15 +22,14 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
   #
   def initialize (attr_name, attr_comp=nil, attr_value=nil, attr_mod=nil)
     
-    list_comparator = [Attr::EQUAL, Attr::SUBSTR, Attr::EQUAL_IGNCASE , Attr::SUBSTR_IGNCASE, 
-      Attr::LESSER, Attr::GREATER, Attr::LESSER_EQUAL, Attr::GREATER_EQUAL, 
-      Attr::NOT_EQUAL, Attr::NOT_SUBSTR, Attr::NOT_EQUAL_IGNCASE, Attr::NOT_SUBSTR_IGNCASE]
+    list_comparator = get_all_comparators
       
-    list_deviation = [Attr::SUM, Attr::SUMINV, Attr::MIN, 
-      Attr::MAX, Attr::AVG, Attr::AVGINV, Attr::STD]
+    list_deviation = get_all_deviations
     
     if attr_name == nil or attr_name.empty?
-      raise QueryException.new("The name of the attribute must be set in order to create the stats")
+      ex = QueryException.new("The name of the attribute must be set in order to create the stats")
+      logger.error(ex.message)
+      raise ex
     else
       @attr_name = attr_name
     end
@@ -93,7 +37,9 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
     if attr_comp == nil and attr_value == nil and attr_mod != nil and not attr_mod.empty? 
     
       if list_deviation.index(attr_mod) == nil
-        raise QueryException.new("The deviation #{attr_mod} of the attribute must be set to one of : #{list_deviation.join(", ")} in order to create the stats")
+        ex = QueryException.new("The deviation #{attr_mod} of the attribute must be set to one of : #{list_deviation.join(", ")} in order to create the stats")
+        logger.error(ex.message)
+        raise ex
       else
         @attr_mod = attr_mod
       end
@@ -101,14 +47,18 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
     elsif attr_comp != nil and attr_value != nil and attr_mod == nil
     
       if list_comparator.index(attr_comp) == nil
-        raise QueryException.new("The comparator \"#{attr_comp}\" is not recognized.\n Please use one of : #{list_comparator.join(", ")}")
+        ex = QueryException.new("The comparator \"#{attr_comp}\" is not recognized.\n Please use one of : #{list_comparator.join(", ")}")
+        logger.error(ex.message)
+        raise ex
       else
         @attr_comp = attr_comp
       end
     
       @attr_value = attr_value
     else
-      raise QueryException.new("The stats can't have both deviation and comparator")
+      ex = QueryException.new("The stats can't have both deviation and comparator")
+      logger.error(ex.message)
+      raise ex
     end
     
   end
@@ -125,11 +75,15 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
   #
   def to_s
     if @attr_name == nil or @attr_name.empty?
-      raise QueryException.new("The stats cannot be converted into string because the name of the attribute is not set.")
+      ex = QueryException.new("The stats cannot be converted into string because the name of the attribute is not set.")
+      logger.error(ex.message)
+      raise ex
     end
     
     if (@attr_comp == nil or @attr_comp.empty?) and @attr_mod == nil
-      raise QueryException.new("The stats cannot be converted into string because the comparator of the attribute and the deviation are not set.")
+      ex = QueryException.new("The stats cannot be converted into string because the comparator of the attribute and the deviation are not set.")
+      logger.error(ex.message)
+      raise ex
     end
     
     stats = "Stats: "

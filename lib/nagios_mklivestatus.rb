@@ -14,38 +14,129 @@ module Nagios
   # License::   General Public Licence
   module MkLiveStatus
 
-    require File.dirname(__FILE__)+'/nagios_mklivestatus/exception/query_exception'
-    require File.dirname(__FILE__)+'/nagios_mklivestatus/exception/request_exception'    
-    require File.dirname(__FILE__)+'/nagios_mklivestatus/query'
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/exception'
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/query_helper'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/filter'
-    require File.dirname(__FILE__)+'/nagios_mklivestatus/stats'
-    require File.dirname(__FILE__)+'/nagios_mklivestatus/request'
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/stats' 
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/query'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/parser'
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/request'
+    
+    require 'logger'
     
     # Initialize the nagios mklivestatus socket informations.
     #
     # The parameter is a hash of options of MkLiveStatus :
-    # * :debug : will activate or not the debugging (true or false) 
+    # * :log : options to activate or change the logger, if none provided keep the current conf or default if logger is not set. For logger options see set_logger 
     # 
-    def self.init(options={:debug=> false})
-      self.set_debug_mode(options)
+    def self.init(options={})
+        
+      if options.has_key? :log
+        self.set_logger(options[:log])
+      elsif logger == nil
+        self.set_logger()
+      end
     end
     
-    #
-    # define the debug mode if it's not already defined
-    #
-    def self.set_debug_mode(options)
+    # logger helper while including
+    def logger
+      Nagios::MkLiveStatus.logger
+    end
 
-      #if not already defined
-      if not Nagios::MkLiveStatus.const_defined?(:DEBUG, false)
-        #set debug mode
-        if options.has_key? :debug and options[:debug]
-          Nagios::MkLiveStatus.const_set(:DEBUG, true)
-        else
-          Nagios::MkLiveStatus.const_set(:DEBUG, false)
-        end
+private   
+    #
+    # define the logger mode if it's not already defined
+    # available options :
+    # * :name : output name ; default : STDOUT. Can be File or string as Logger.new().
+    # * :level : output severity ; default : Logger::ERROR.
+    # * :shift_age : shift age, like in Logger.new(name, shift_age)
+    # * :shift_size : shift size, like in Logger.new(name, shift_age, shift_size) only if shift_age is defined
+    #
+    def self.set_logger(options={})
+
+      
+      if options.has_key? :name and options[:name] != nil
+        logger_name = options[:name]
+      else
+        logger_name = $stdout
       end
       
+      if options.has_key? :level and options[:level] != nil
+        logger_level = options[:level]
+      else
+        logger_level = Logger::ERROR
+      end
+      
+      if options.has_key? :shift_age and options[:shift_age] != nil
+        logger_shift_age = options[:shift_age]
+        shift_age = true
+      else
+        shift_age = false
+      end
+      
+      if options.has_key? :shift_size and options[:shift_size] != nil
+        logger_shift_size = options[:shift_size]
+        shift_size = true
+      else
+        shift_size = false
+      end
+      
+      if logger_level == Logger::DEBUG
+        if logger_name == $stdout
+          log_name = "STDOUT"
+        elsif logger_name == $stderr
+          log_name = "STDERR"
+        else
+          log_name = logger_name.to_s
+        end 
+      end
+      
+      if shift_age and shift_size
+        @logger = Logger.new(logger_name, logger_shift_age, logger_shift_size)
+        init_logger(logger_level)
+        @logger.debug("logger initialized with : #{[log_name, logger_shift_age, logger_shift_size].join(', ')}")
+      elsif shift_age
+        @logger = Logger.new(logger_name, logger_shift_age)
+        init_logger(logger_level)
+        @logger.debug("logger initialized with : #{[log_name, logger_shift_age].join(', ')}")
+      else
+        @logger = Logger.new(logger_name)
+        init_logger(logger_level)
+        @logger.debug("logger initialized with : #{log_name}")
+      end
+      
+      
+      
+    end
+    
+    # Initialize the logger with the level and change the output format
+    def self.init_logger(logger_level)
+      @logger.level = logger_level
+      @logger.formatter = proc do |severity, datetime, progname, msg|
+        date_str = "#{datetime.strftime("%d/%m/%Y %H:%M:%S")}"
+        prog_str = progname
+        if prog_str == nil or prog_str.empty?
+          prog_str = "Nag::MkLiv"
+        elsif prog_str.length < 10
+          (10 - prog_str.length).times do
+            prog_str<< " "
+          end
+        else
+          prog_str = prog_str[0,9]
+        end
+        
+        spacer = ""
+        if severity.length == 4
+          spacer = " "
+        end
+        
+        "#{date_str} [#{prog_str}] [#{severity}]#{spacer} : #{msg}\n"
+      end
+    end
+    
+    # provide the logger for the include
+    def self.logger
+      @logger
     end
     
   end

@@ -17,7 +17,9 @@ class Nagios::MkLiveStatus::Stats::Or < Nagios::MkLiveStatus::Stats
   #
   def initialize(left_expr, right_expr)
     if not left_expr.is_a? Nagios::MkLiveStatus::Stats or not right_expr.is_a? Nagios::MkLiveStatus::Stats
-      raise QueryException.new("The left and the right operand for an OR expression must be of Class Nagios::MkLiveStatus::Stats")
+      ex = QueryException.new("The left and the right operand for an OR expression must be of Class Nagios::MkLiveStatus::Stats")
+      logger.error(ex.message)
+      raise ex
     end
     
     @expressions = Array.new
