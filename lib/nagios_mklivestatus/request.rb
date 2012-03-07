@@ -24,8 +24,6 @@ class Nagios::MkLiveStatus::Request
   #
   def initialize(path)
     
-    Nagios::MkLiveStatus::init(options)
-    
     #check socket type
     # if the path start with tcp:// => tcp socket
     if path.strip.start_with?("tcp://")
