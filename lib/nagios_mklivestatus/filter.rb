@@ -1,8 +1,5 @@
 # This module is used to agregate all filter class into one module.
 #
-# It implements one method which will convert a standard filter to a string 
-# output for Nagios.
-#
 # It also provides the following filter expressions:
 # * Nagios::MkLiveStatus::Filter::Attr : standard attribute or field filter
 # * Nagios::MkLiveStatus::Filter::And : "AND" operator between two filters expressions

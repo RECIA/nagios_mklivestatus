@@ -1,4 +1,4 @@
-# This class is used to make a logical "OR" operator between two filter expression
+# This class is used to make a logical "OR" operator between two filter expressions.
 #
 # If one of the filter expression is also an "OR", 
 # it takes all the expressions of the operator as its own.
@@ -17,9 +17,7 @@ class Nagios::MkLiveStatus::Filter::Or < Nagios::MkLiveStatus::Filter
   #
   def initialize(left_expr, right_expr)
     if not left_expr.is_a? Nagios::MkLiveStatus::Filter or not right_expr.is_a? Nagios::MkLiveStatus::Filter
-      ex = QueryException.new("The left and the right operand for an OR expression must be of Class Nagios::MkLiveStatus::Filter")
-      logger.error(ex.message)
-      raise ex
+      raise QueryException.new("The left and the right operand for an OR expression must be filter expressions.")
     end
     
     @expressions = Array.new

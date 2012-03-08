@@ -1,13 +1,11 @@
-# This module holds the definition of the class used to query Nagios MkLiveStatus
+# This module holds the definition of the class used to query MkLiveStatus
 #
 # Author::    Esco-lan Team  (mailto:team@esco-lan.org)
 # Copyright:: Copyright (c) 2011 GIP RECIA
 # License::   General Public Licence
 module Nagios
-  # This class is used to create a request
-  # It accepts the following socket:
-  # * TCP : new("tcp://<host>:<port>")
-  # * Unix : new("/var/lib/nagios/rw/live") 
+  # This module provides convenience methods to the application.
+  # It also can be initiated or changed by the user to change parameters
   #
   # Author::    Esco-lan Team  (mailto:team@esco-lan.org)
   # Copyright:: Copyright (c) 2011 GIP RECIA
@@ -17,14 +15,15 @@ module Nagios
     require File.dirname(__FILE__)+'/nagios_mklivestatus/exception'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/query_helper'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/filter'
-    require File.dirname(__FILE__)+'/nagios_mklivestatus/stats' 
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/stats'
+    require File.dirname(__FILE__)+'/nagios_mklivestatus/wait'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/query'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/parser'
     require File.dirname(__FILE__)+'/nagios_mklivestatus/request'
     
     require 'logger'
     
-    # Initialize the nagios mklivestatus socket informations.
+    # Initialize the nagios mklivestatus informations.
     #
     # The parameter is a hash of options of MkLiveStatus :
     # * :log : options to activate or change the logger, if none provided keep the current conf or default if logger is not set. For logger options see set_logger 
@@ -58,7 +57,6 @@ private
     # * :shift_size : shift size, like in Logger.new(name, shift_age, shift_size) only if shift_age is defined
     #
     def self.set_logger(options={})
-
       
       if options.has_key? :name and options[:name] != nil
         logger_name = options[:name]
@@ -109,8 +107,6 @@ private
         init_logger(logger_level)
         @logger.debug("logger initialized with : #{log_name}")
       end
-      
-      
       
     end
     

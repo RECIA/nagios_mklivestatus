@@ -1,27 +1,27 @@
-# This class is used to make a logical "AND" operator between two stats expressions.
+# This class is used to make a logical "AND" operator between two wait expressions.
 #
-# If one of the stats expression is also an "AND", 
+# If one of the wait expression is also an "AND", 
 # it takes all the expressions of the operator as its own.
 #
 # Author::    Esco-lan Team  (mailto:team@esco-lan.org)
 # Copyright:: Copyright (c) 2012 GIP RECIA
 # License::   General Public Licence
-class Nagios::MkLiveStatus::Stats::And < Nagios::MkLiveStatus::Stats
+class Nagios::MkLiveStatus::Wait::And < Nagios::MkLiveStatus::Wait
   
   include Nagios::MkLiveStatus
   
   #
   # Create a new "AND" operator between left and right expressions.
   #
-  # Those expressions must be of type Nagios::MkLiveStatus::Stats
+  # Those expressions must be of type Nagios::MkLiveStatus::Wait
   #
   def initialize(left_expr, right_expr)
-    if not left_expr.is_a? Nagios::MkLiveStatus::Stats or not right_expr.is_a? Nagios::MkLiveStatus::Stats
-      raise QueryException.new("The left and the right operand for an AND expression must be stats expressions.")
+    if not check_valid_condition(left_expr) or not check_valid_condition(right_expr)
+      raise QueryException.new("The left and the right operand for an OR expression must be valid wait conditions.")
     end
     
     @expressions = Array.new
-    if left_expr.is_a? Nagios::MkLiveStatus::Stats::And
+    if left_expr.is_a? Nagios::MkLiveStatus::Wait::And
       left_expr.get_expressions.each do |expr|
         @expressions.push expr
       end
@@ -29,7 +29,7 @@ class Nagios::MkLiveStatus::Stats::And < Nagios::MkLiveStatus::Stats
       @expressions.push left_expr
     end
     
-    if right_expr.is_a? Nagios::MkLiveStatus::Stats::And
+    if right_expr.is_a? Nagios::MkLiveStatus::Wait::And
       right_expr.get_expressions.each do |expr|
         @expressions.push expr
       end
@@ -49,31 +49,17 @@ class Nagios::MkLiveStatus::Stats::And < Nagios::MkLiveStatus::Stats
   
   #
   # Convert the current "AND" expression into a nagios query string
-  #  Stats: ...
-  #  Stats: ...
-  #  StatsAnd: 2
+  #  WaitCondition: ...
+  #  WaitCondition: ...
+  #  WaitConditionAnd: 2
   #
   def to_s
     and_arr = []
     @expressions.each do |expr|
       and_arr.push expr.to_s
     end
-    and_arr.push "StatsAnd: #{@expressions.length}"
+    and_arr.push "WaitConditionAnd: #{@expressions.length}"
     return and_arr.join("\n")
   end
   
-  # Transform predicate to column name
-  # "left and right" with brackets if children 
-  def to_column_name(has_parent=false)
-    and_arr = []
-    @expressions.each do |expr|
-      and_arr.push expr.to_column_name(true)
-    end
-    
-    column_name = and_arr.join(" and ") 
-    if has_parent
-      column_name = "( "+column_name+" )"
-    end
-    return column_name
-  end
 end

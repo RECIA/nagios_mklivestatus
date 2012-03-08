@@ -1,20 +1,20 @@
-# This class is used to make a logical "NOT" operator for the filter expression.
+# This class is used to make a logical "NOT" operator for the expression.
 #
 # Author::    Esco-lan Team  (mailto:team@esco-lan.org)
 # Copyright:: Copyright (c) 2012 GIP RECIA
 # License::   General Public Licence
-class Nagios::MkLiveStatus::Filter::Negate < Nagios::MkLiveStatus::Filter
+class Nagios::MkLiveStatus::Wait::Negate < Nagios::MkLiveStatus::Wait
   
   include Nagios::MkLiveStatus
   
   #
-  # Create a new "Not" operator for the expression.
+  # Create a new "Not" operator to the expression.
   #
-  # Those expressions must be of type Nagios::MkLiveStatus::Filter
+  # Those expressions must be of type Nagios::MkLiveStatus::Wait
   #
   def initialize(expr)
-    if not expr.is_a? Nagios::MkLiveStatus::Filter
-      raise QueryException.new("The operand for a NEGATE expression must be a filter expression.")
+    if not check_valid_condition expr
+      raise QueryException.new("The operand for a NEGATE expression must be one valid wait condition.")
     end
     
     @expression = expr
@@ -31,18 +31,18 @@ class Nagios::MkLiveStatus::Filter::Negate < Nagios::MkLiveStatus::Filter
   
   #
   # Convert the current "Negate" expression into a nagios query string.
-  #  Filter: ...
-  #  Negate:
   #
   # If the sub expression is also a Negate, it returns the sub-sub expression without negating it.
+  #  WaitCondition: ...
+  #  WaitConditionNegate:
   #
   def to_s
-    if @expression.is_a? Nagios::MkLiveStatus::Filter::Negate
+    if @expression.is_a? Nagios::MkLiveStatus::Wait::Negate
       return @expression.get_expression.to_s
     else
       negate_arr = []
       negate_arr.push @expression.to_s
-      negate_arr.push "Negate: "
+      negate_arr.push "WaitConditionNegate: "
       return negate_arr.join("\n")
     end
   end

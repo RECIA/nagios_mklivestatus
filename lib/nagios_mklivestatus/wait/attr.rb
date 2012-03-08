@@ -1,10 +1,10 @@
-# This class symbolise a filter unit. This unit represents a small filter predicate like, in the nagios query, this : 
-#  Filter: host_name = name
+# This class symbolise a wait condition unit. This unit represents a small wait condition predicate like, in the nagios query, this : 
+#  WaitCondition: host_name = name
 #
 # Author::    Esco-lan Team  (mailto:team@esco-lan.org)
 # Copyright:: Copyright (c) 2012 GIP RECIA
 # License::   General Public Licence
-class Nagios::MkLiveStatus::Filter::Attr < Nagios::MkLiveStatus::Filter
+class Nagios::MkLiveStatus::Wait::Attr < Nagios::MkLiveStatus::Wait
   
   include Nagios::MkLiveStatus
   include Nagios::MkLiveStatus::QueryHelper::Comparator
@@ -20,7 +20,7 @@ class Nagios::MkLiveStatus::Filter::Attr < Nagios::MkLiveStatus::Filter
     list_comparator = get_all_comparators
     
     if attr_name == nil or attr_name.empty?
-      raise QueryException.new("The name of the attribute must be set in order to create the filter")
+      raise QueryException.new("The name of the attribute must be set in order to create the wait condition")
     else
       @attr_name = attr_name
     end
@@ -35,23 +35,25 @@ class Nagios::MkLiveStatus::Filter::Attr < Nagios::MkLiveStatus::Filter
   end
   
   #
-  # Convert the class into the nagios query string:
-  #  Filter: name comp value
+  # Convert the Wait class to the nagios query string.
+  #
+  # Use the parameters to create a string corresponding to:
+  #  WaitCondition: name comp value
   #
   def to_s
     if @attr_name == nil or @attr_name.empty?
-      raise QueryException.new("The filter cannot be converted into string because the name of the attribute is not set.")
+      raise QueryException.new("The wait condition cannot be converted into string because the name of the attribute is not set.")
     end
     
     if @attr_comp == nil or @attr_comp.empty?
-      raise QueryException.new("The filter cannot be converted into string because the comparator of the attribute is not set.")
+      raise QueryException.new("The wait condition cannot be converted into string because the comparator of the attribute is not set.")
     end
     
     if @attr_value == nil or @attr_value.empty?
-      return "Filter: "+@attr_name+" "+@attr_comp 
+      return "WaitCondition: "+@attr_name+" "+@attr_comp 
     end
     
-    return "Filter: "+@attr_name+" "+@attr_comp+" "+@attr_value;
+    return "WaitCondition: "+@attr_name+" "+@attr_comp+" "+@attr_value;
   end
   
 end

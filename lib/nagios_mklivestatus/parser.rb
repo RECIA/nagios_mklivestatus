@@ -16,9 +16,7 @@ module Nagios::MkLiveStatus::Parser
   def nagmk_parse(query_str, with_opts=false)
     
     if not query_str.is_a? String or query_str.empty?
-      ex = QueryException.new("The query is not valid. You must provide a valid string.")
-      logger.error(ex.message)
-      raise ex
+      raise QueryException.new("The query is not valid. You must provide a valid string.")
     end
     
     query = nagmk_query()
@@ -30,18 +28,19 @@ module Nagios::MkLiveStatus::Parser
     # the first line is the GET of the query
     get = commands.shift.strip.match(/^GET (.*)$/)
     if get == nil
-      ex = QueryException.new("The query has no GET. The first line must match /^GET (.*)$/.")
-      logger.error(ex.message)
-      raise ex
+      raise QueryException.new("The query has no GET. The first line must match /^GET (.*)$/.")
     else
       query.get get[1]
     end
     
     columns_parsed=false
     query_parsed=false
+    filter_parsed=false
+    wait_before=false
     stats = []
     columns = []
     filters = []
+    waits = []
     
     commands.each do |command|
       command.strip!
@@ -55,9 +54,7 @@ module Nagios::MkLiveStatus::Parser
       if command.match(/^Columns: /)
         
         if query_parsed
-          ex = QueryException.new("The Query Options must be defined after Columns : #{command}")
-          logger.error(ex.message)
-          raise ex
+          raise QueryException.new("The query options must be defined after columns : #{command}")
         end
         
         if not columns_parsed
@@ -65,22 +62,16 @@ module Nagios::MkLiveStatus::Parser
           columns = command.match(/^Columns: (.*)$/)[1].split(" ")
           columns_parsed = true
         else
-          ex = QueryException.new("The definitions of columns are encountered twice. Or after the Filter predicates.")
-          logger.error(ex.message)
-          raise ex
+          raise QueryException.new("The definitions of columns are encountered twice. Or after the filter or waits predicates.")
         end
       elsif command.match(/^Stats(And|Or)?: /)
         
         if columns_parsed
-          ex = QueryException.new("The stats predicates must be defined before Columns : #{command}")
-          logger.error(ex.message)
-          raise ex
+          raise QueryException.new("The stats predicates must be defined before columns, filters and waits : #{command}")
         end
         
         if query_parsed
-          ex = QueryException.new("The Query Options must be defined after Stats : #{command}")
-          logger.error(ex.message)
-          raise ex
+          raise QueryException.new("The query options must be defined after stats : #{command}")
         end
         
         stats_dispatching(command, stats)
@@ -92,12 +83,29 @@ module Nagios::MkLiveStatus::Parser
         end
         
         if query_parsed
-          ex = QueryException.new("The Query Options must be defined after Filters : #{command}")
-          logger.error(ex.message)
-          raise ex
+          raise QueryException.new("The query options must be defined after filters : #{command}")
         end
         
         filter_dispatching(command, filters)
+        filter_parsed = true
+        
+      elsif command.match(/^Wait(.*): /)
+        
+        if not columns_parsed
+          columns_parsed = true
+        end
+        
+        if query_parsed
+          raise QueryException.new("The query options must be defined after waits : #{command}")
+        end
+        
+        if filter_parsed and wait_before
+          raise QueryException.new("The Query cannot have wait expression before and after filters : #{command}")
+        elsif not filter_parsed
+          wait_before=true
+        end
+        
+        wait_dispatching(command, waits)
         
       elsif command.match(/^UserAuth: (.+)$/)
         query_parsed = true
@@ -110,15 +118,17 @@ module Nagios::MkLiveStatus::Parser
       elsif command.match(/^Limit: (\d+)$/)
         query_parsed = true
         nagios_opts[:limit] = command.match(/^Limit: (\d+)$/)[1].to_i
+      
+      elsif command.match(/^Localtime: (\d+)$/)
+        query_parsed = true
+        nagios_opts[:local_time] = command.match(/^Localtime: (\d+)$/)[1].to_i
         
       elsif command.match(/^OutputFormat: (json|python)$/)
         query_parsed = true
         nagios_opts[:output] = command.match(/^OutputFormat: (json|python)$/)[1]
         
       elsif not command.empty?
-        ex = QueryException.new("The current query is not valid due to : #{command}")
-        logger.error(ex.message)
-        raise ex
+        raise QueryException.new("The current query is not valid due to : #{command}")
       end
       
     end
@@ -135,6 +145,16 @@ module Nagios::MkLiveStatus::Parser
       query.addStats stat
     end
     
+    if wait_before
+      waits.each do |wait|
+        query.addWaitBefore wait
+      end
+    else
+      waits.each do |wait|
+        query.addWaitAfter wait
+      end
+    end
+    
     if with_opts
       return query, nagios_opts
     else
@@ -143,6 +163,7 @@ module Nagios::MkLiveStatus::Parser
   end
   
 private
+  # control and dispatch stats from command
   def stats_dispatching(command, stats=[])
     if command.match(/^Stats: /)
       
@@ -151,9 +172,7 @@ private
     elsif command.match(/^StatsAnd: /)
       number = command.match(/^StatsAnd: (\d)$/)[1].to_i
       if number <= 1
-        ex = QueryException.new("The StatAnd predicate must be above 1.")
-        logger.error(ex.message)
-        raise ex
+        raise QueryException.new("The StatAnd predicate must be above 1.")
       end
       
       (number-1).times do |idx|
@@ -162,9 +181,7 @@ private
     elsif command.match(/^StatsOr: /)
       number = command.match(/^StatsOr: (\d)$/)[1].to_i
       if number <= 1
-        ex = QueryException.new("The StatOr predicate must be above 1.")
-        logger.error(ex.message)
-        raise ex
+        raise QueryException.new("The StatOr predicate must be above 1.")
       end
       
       (number-1).times do |idx|
@@ -173,6 +190,7 @@ private
     end
   end
   
+  # control and dispatch filters from command
   def filter_dispatching(command, filters=[])
     if command.match(/^Filter: /)
       
@@ -181,9 +199,7 @@ private
     elsif command.match(/^And: /)
       number = command.match(/^And: (\d)$/)[1].to_i
       if number <= 1
-        ex = QueryException.new("The And predicate must be above 1.")
-        logger.error(ex.message)
-        raise ex
+        raise QueryException.new("The And predicate must be above 1.")
       end
       
       (number-1).times do |idx|
@@ -192,9 +208,7 @@ private
     elsif command.match(/^Or: /)
       number = command.match(/^Or: (\d)$/)[1].to_i
       if number <= 1
-        ex = QueryException.new("The Or predicate must be above 1.")
-        logger.error(ex.message)
-        raise ex
+        raise QueryException.new("The Or predicate must be above 1.")
       end
       
       (number-1).times do |idx|
@@ -202,6 +216,43 @@ private
       end
     elsif command.match(/^Negate:/)
       filters.push nagmk_negate(filters.pop)
+    end
+  end
+  
+  # control and dispatch waits from command
+  def wait_dispatching(command, waits=[])
+    if command.match(/^WaitCondition: /)
+      
+      waits.push nagmk_wait_condition_from_str(command)
+      
+    elsif command.match(/^WaitConditionAnd: /)
+      number = command.match(/^WaitConditionAnd: (\d)$/)[1].to_i
+      if number <= 1
+        raise QueryException.new("The WaitConditionAnd predicate must be above 1.")
+      end
+      
+      (number-1).times do |idx|
+        waits.push nagmk_wait_condition_and(waits.pop, waits.pop)
+      end
+    elsif command.match(/^WaitConditionOr: /)
+      number = command.match(/^WaitConditionOr: (\d)$/)[1].to_i
+      if number <= 1
+        raise QueryException.new("The WaitConditionOr predicate must be above 1.")
+      end
+      
+      (number-1).times do |idx|
+        waits.push nagmk_wait_condition_or(waits.pop, waits.pop)
+      end
+    elsif command.match(/^WaitConditionNegate: /)
+      waits.push nagmk_wait_condition_negate(waits.pop)
+    elsif command.match(/^WaitObject: (.+)$/)
+      waits.push nagmk_wait_condition_object(command.match(/^WaitObject: (.+)$/)[1])
+    elsif command.match(/^WaitTrigger: (.+)$/)
+      waits.push nagmk_wait_condition_trigger(command.match(/^WaitTrigger: (.+)$/)[1])
+    elsif command.match(/^WaitTimeout: (\d+)$/)
+      waits.push nagmk_wait_condition_timeout(command.match(/^WaitTimeout: (\d+)$/)[1])
+    else
+      raise QueryException.new("Unrecognized wait command : #{command}")
     end
   end
 end

@@ -49,7 +49,7 @@ class Nagios::MkLiveStatus::Request
   
   # The method opens the socket and send the query then return the response of nagios
   # 
-  # The query parameter must be set and be a Nagios::MkLiveStatus::Query reprensting the MKLiveStatus Query :
+  # The query parameter must be set and be a Nagios::MkLiveStatus::Query representing the MKLiveStatus Query :
   #  GET hosts
   # or
   #  GET hosts
@@ -61,6 +61,7 @@ class Nagios::MkLiveStatus::Request
   # * :user : is the user used with AuthUser of MkLiveStatus for hosts, services, hostgroups, servicegroup and log
   # * :column_headers : set to true to have headers of the query as first line (ColumnHeaders: on) 
   # * :limit : limitation of the output (Limit: X)
+  # * :local_time : set localtime (LocalTime: X) in unix timestamp
   # * :output : output format like json/python, if none provided set to CSV (OutputFormat: out)
   def query(query=nil, options={})
     
@@ -82,15 +83,19 @@ class Nagios::MkLiveStatus::Request
       limit = options[:limit].to_i
     end
     
+    #set localtime 
+    localtime = nil
+    if options.has_key? :local_time and options[:local_time] != nil and not options[:local_time].to_i
+      localtime = options[:local_time].to_i
+    end
+    
     #set output
     output = nil
     if options.has_key? :output and options[:output] != nil and not options[:output].empty?
       if ['json','python'].include?(options[:output])
         output = options[:output]
       else
-        ex = RequestException.new("output must be one of #{['json','python'].join(', ')}")
-        logger.error(ex.message)
-        raise ex
+        raise RequestException.new("Output must be one of #{['json','python'].join(', ')}")
       end
     end
     
@@ -111,6 +116,10 @@ class Nagios::MkLiveStatus::Request
       #set user if needed
       if user != nil and not user.empty? and strQuery.match /^GET\s+(hosts|hostgroups|services|servicegroup|log)\s*$/
         strQuery << "UserAuth: #{user}\n"
+      end
+      
+      if localtime != nil
+        strQuery << "LocalTime: #{localtime}\n"
       end
       
       # set columns headers
@@ -184,12 +193,13 @@ private
   def check_receiving_error( datas )
     error_code = datas.split(" ")[0].to_i
     if error_code > 200
-      ex = RequestException.new("query had returned an error_code #{error_code} : #{datas.split("\n")[1]}")
-      logger.error(ex.message)
-      raise ex
+      raise RequestException.new("query had returned an error_code #{error_code} : #{datas.split("\n")[1]}")
     end
   end
   
+  #
+  # Open socket for querying
+  #
   def open_socket()
     
     socket = nil
@@ -207,15 +217,11 @@ private
           logger.debug("Unix socket opened")
       end
     rescue Exception => ex
-      ex = RequestException.new("Socket error : #{ex.message}")
-      logger.error(ex.message)
-      raise ex
+      raise RequestException.new("Socket error : #{ex.message}")
     end
     
     if socket == nil
-      ex = RequestException.new("Socket error : socket type not recognized.")
-      logger.error(ex.message)
-      raise ex
+      raise RequestException.new("Socket error : socket type not recognized.")
     end
     
     return socket

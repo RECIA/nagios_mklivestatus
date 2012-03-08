@@ -1,27 +1,27 @@
-# This class is used to make a logical "OR" operator between two stats expressions.
+# This class is used to make a logical "OR" operator between two wait condition expressions.
 #
-# If one of the stats expression is also an "OR", 
+# If one of the wait condition expression is also an "OR", 
 # it takes all the expressions of the operator as its own.
 #
 # Author::    Esco-lan Team  (mailto:team@esco-lan.org)
 # Copyright:: Copyright (c) 2012 GIP RECIA
 # License::   General Public Licence
-class Nagios::MkLiveStatus::Stats::Or < Nagios::MkLiveStatus::Stats
+class Nagios::MkLiveStatus::Wait::Or < Nagios::MkLiveStatus::Wait
   
   include Nagios::MkLiveStatus
   
   #
   # Create a new "OR" operator between left and right expressions.
   #
-  # Those expressions must be of type Nagios::MkLiveStatus::Stats
+  # Those expressions must be of type Nagios::MkLiveStatus::Wait
   #
   def initialize(left_expr, right_expr)
-    if not left_expr.is_a? Nagios::MkLiveStatus::Stats or not right_expr.is_a? Nagios::MkLiveStatus::Stats
-      raise QueryException.new("The left and the right operand for an OR expression must be stats expressions.")
+    if not check_valid_condition(left_expr) or not check_valid_condition(right_expr)
+      raise QueryException.new("The left and the right operand for an OR expression must be valid wait conditions.")
     end
     
     @expressions = Array.new
-    if left_expr.is_a? Nagios::MkLiveStatus::Filter::Or
+    if left_expr.is_a? Nagios::MkLiveStatus::Wait::Or
       left_expr.get_expressions.each do |expr|
         @expressions.push expr
       end
@@ -29,7 +29,7 @@ class Nagios::MkLiveStatus::Stats::Or < Nagios::MkLiveStatus::Stats
       @expressions.push left_expr
     end
     
-    if right_expr.is_a? Nagios::MkLiveStatus::Filter::Or
+    if right_expr.is_a? Nagios::MkLiveStatus::Wait::Or
       right_expr.get_expressions.each do |expr|
         @expressions.push expr
       end
@@ -49,33 +49,16 @@ class Nagios::MkLiveStatus::Stats::Or < Nagios::MkLiveStatus::Stats
   
   #
   # Convert the current "OR" expression into a nagios query string
-  #  Stats: ...
-  #  Stats: ...
-  #  StatsOr: 2
+  #  WaitCondition: ...
+  #  WaitCondition: ...
+  #  WaitConditionOr: 2
   #
   def to_s
     or_arr = []
     @expressions.each do |expr|
       or_arr.push expr.to_s
     end
-    or_arr.push "StatsOr: #{@expressions.length}"
+    or_arr.push "WaitConditionOr: #{@expressions.length}"
     return or_arr.join("\n")
-  end
-  
-  # transform predicate to column name
-  # "left or right" with brackets if children
-  def to_column_name(has_parent=false)
-    or_arr = []
-    @expressions.each do |expr|
-      or_arr.push expr.to_column_name(true)
-    end
-    
-    column_name = or_arr.join(" or ")
-     
-    if has_parent
-      column_name = "( "+column_name+" )"
-    end
-    
-    return column_name
   end
 end

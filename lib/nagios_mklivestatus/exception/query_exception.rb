@@ -1,5 +1,5 @@
 ##
-# Exception for nagios query manipulation : creation of predicat Filter, Stats 
+# Exception for nagios query manipulation : creation of predicat Filter, Stats, Wait 
 # or converting query to string
 #
 # Author::    Esco-lan Team  (mailto:team@esco-lan.org)

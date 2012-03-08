@@ -27,9 +27,7 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
     list_deviation = get_all_deviations
     
     if attr_name == nil or attr_name.empty?
-      ex = QueryException.new("The name of the attribute must be set in order to create the stats")
-      logger.error(ex.message)
-      raise ex
+      raise QueryException.new("The name of the attribute must be set in order to create the stats.")
     else
       @attr_name = attr_name
     end
@@ -37,9 +35,7 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
     if attr_comp == nil and attr_value == nil and attr_mod != nil and not attr_mod.empty? 
     
       if list_deviation.index(attr_mod) == nil
-        ex = QueryException.new("The deviation #{attr_mod} of the attribute must be set to one of : #{list_deviation.join(", ")} in order to create the stats")
-        logger.error(ex.message)
-        raise ex
+        raise QueryException.new("The deviation #{attr_mod} of the attribute must be set to one of : #{list_deviation.join(", ")} in order to create the stats")
       else
         @attr_mod = attr_mod
       end
@@ -47,43 +43,29 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
     elsif attr_comp != nil and attr_value != nil and attr_mod == nil
     
       if list_comparator.index(attr_comp) == nil
-        ex = QueryException.new("The comparator \"#{attr_comp}\" is not recognized.\n Please use one of : #{list_comparator.join(", ")}")
-        logger.error(ex.message)
-        raise ex
+        raise QueryException.new("The comparator \"#{attr_comp}\" is not recognized.\n Please use one of : #{list_comparator.join(", ")}")
       else
         @attr_comp = attr_comp
       end
     
       @attr_value = attr_value
     else
-      ex = QueryException.new("The stats can't have both deviation and comparator")
-      logger.error(ex.message)
-      raise ex
+      raise QueryException.new("The stats can't have both deviation and comparator.")
     end
     
   end
   
   #
   # Convert the Stats class to the nagios query string.
-  #
-  # [name] name of the column or field to filter, if not set raise a QueryException.
-  # [comp] comparator between the name and the value, if not set raise a QueryException.
-  # [value] value to compare to the name
-  #
-  # Use the parameters to create a string corresponding to:
   #  Stats: name comp value
   #
   def to_s
     if @attr_name == nil or @attr_name.empty?
-      ex = QueryException.new("The stats cannot be converted into string because the name of the attribute is not set.")
-      logger.error(ex.message)
-      raise ex
+      raise QueryException.new("The stats cannot be converted into string because the name of the attribute is not set.")
     end
     
     if (@attr_comp == nil or @attr_comp.empty?) and @attr_mod == nil
-      ex = QueryException.new("The stats cannot be converted into string because the comparator of the attribute and the deviation are not set.")
-      logger.error(ex.message)
-      raise ex
+      raise QueryException.new("The stats cannot be converted into string because the comparator of the attribute and the deviation are not set.")
     end
     
     stats = "Stats: "
@@ -104,15 +86,11 @@ class Nagios::MkLiveStatus::Stats::Attr < Nagios::MkLiveStatus::Stats
   # same as the to_s but without "Stats: " (ex: "state = 0")
   def to_column_name(has_parent=false)
     if @attr_name == nil or @attr_name.empty?
-      ex = QueryException.new("The stats cannot be converted into string because the name of the attribute is not set.")
-      logger.error(ex.message)
-      raise ex
+      raise QueryException.new("The stats cannot be converted into string column name because the name of the attribute is not set.")
     end
     
     if (@attr_comp == nil or @attr_comp.empty?) and @attr_mod == nil
-      ex = QueryException.new("The stats cannot be converted into string because the comparator of the attribute and the deviation are not set.")
-      logger.error(ex.message)
-      raise ex
+      raise QueryException.new("The stats cannot be converted into string column name because the comparator of the attribute and the deviation are not set.")
     end
     
     if @attr_mod != nil

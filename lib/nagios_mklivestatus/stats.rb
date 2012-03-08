@@ -1,8 +1,5 @@
 # This class is used to agregate all stats class into one module.
 #
-# It implements one method which will convert a standard stats to a string 
-# output for Nagios.
-#
 # It also provides the following stats expressions:
 # * Nagios::MkLiveStatus::Stats::Attr : standard attribute or field stats
 # * Nagios::MkLiveStatus::Stats::And : "AND" operator between two stats expressions
