@@ -10,9 +10,10 @@ module Nagios::MkLiveStatus::Parser
   include Nagios::MkLiveStatus::QueryHelper
   
   #
-  # Parser method, takes the string and return a Nagios::MkLiveStatus::Query
+  # Parser method, takes the string and, optionally, a boolean to add opts
+  # And return a Nagios::MkLiveStatus::Query and query options (if asked)
   #
-  def nagmk_parse(query_str)
+  def nagmk_parse(query_str, with_opts=false)
     
     if not query_str.is_a? String or query_str.empty?
       ex = QueryException.new("The query is not valid. You must provide a valid string.")
@@ -21,6 +22,7 @@ module Nagios::MkLiveStatus::Parser
     end
     
     query = nagmk_query()
+    nagios_opts = {}
     
     #split all the lines in order to create a table of string commands
     commands = query_str.split("\n")
@@ -36,6 +38,7 @@ module Nagios::MkLiveStatus::Parser
     end
     
     columns_parsed=false
+    query_parsed=false
     stats = []
     columns = []
     filters = []
@@ -44,7 +47,19 @@ module Nagios::MkLiveStatus::Parser
       command.strip!
       logger.debug("> processing command \"#{command}\"")
       
+      #if end query found, columns must be parsed
+      if query_parsed and not columns_parsed
+        columns_parsed = true
+      end
+      
       if command.match(/^Columns: /)
+        
+        if query_parsed
+          ex = QueryException.new("The Query Options must be defined after Columns : #{command}")
+          logger.error(ex.message)
+          raise ex
+        end
+        
         if not columns_parsed
           logger.debug(">> columns found \"#{command.match(/^Columns: (.*)$/)[1]}\"")
           columns = command.match(/^Columns: (.*)$/)[1].split(" ")
@@ -62,6 +77,12 @@ module Nagios::MkLiveStatus::Parser
           raise ex
         end
         
+        if query_parsed
+          ex = QueryException.new("The Query Options must be defined after Stats : #{command}")
+          logger.error(ex.message)
+          raise ex
+        end
+        
         stats_dispatching(command, stats)
         
       elsif command.match(/^(Filter: |And: |Or: |Negate:)/)
@@ -70,7 +91,29 @@ module Nagios::MkLiveStatus::Parser
           columns_parsed = true
         end
         
+        if query_parsed
+          ex = QueryException.new("The Query Options must be defined after Filters : #{command}")
+          logger.error(ex.message)
+          raise ex
+        end
+        
         filter_dispatching(command, filters)
+        
+      elsif command.match(/^UserAuth: (.+)$/)
+        query_parsed = true
+        nagios_opts[:user] = command.match(/^UserAuth: (.+)$/)[1]
+        
+      elsif command.match(/^ColumnHeaders: (on|off)$/)
+        query_parsed = true
+        nagios_opts[:column_headers] = command.match(/^ColumnHeaders: (on|off)$/)[1] == "on"
+        
+      elsif command.match(/^Limit: (\d+)$/)
+        query_parsed = true
+        nagios_opts[:limit] = command.match(/^Limit: (\d+)$/)[1].to_i
+        
+      elsif command.match(/^OutputFormat: (json|python)$/)
+        query_parsed = true
+        nagios_opts[:output] = command.match(/^OutputFormat: (json|python)$/)[1]
         
       elsif not command.empty?
         ex = QueryException.new("The current query is not valid due to : #{command}")
@@ -92,7 +135,11 @@ module Nagios::MkLiveStatus::Parser
       query.addStats stat
     end
     
-    return query
+    if with_opts
+      return query, nagios_opts
+    else
+      return query
+    end
   end
   
 private

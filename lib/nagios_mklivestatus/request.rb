@@ -159,15 +159,16 @@ class Nagios::MkLiveStatus::Request
       
       # if columns header are required but stats are defined > no column. So we put ours
       if columns.length > 0
+        logger.debug("Adding columns")
         response = columns.join(";")+"\n"+response
       end
       
-      logger.info("Results :")
-      response.split("\n").each do |line|
-        logger.info(line)
+      if response
+        logger.info("Results :")
+        response.split("\n").each do |line|
+          logger.info(line)
+        end
       end
-      
-      
       
       return response
       
