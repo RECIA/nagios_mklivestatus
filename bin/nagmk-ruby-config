@@ -1,0 +1,93 @@
+#!/usr/bin/env ruby
+# Set default configuration for the nagmk-ruby
+#
+# nagmk-ruby-config [-h|--help] [-p|--path PATH] [-r|--remove] [-o|--options NAME=VALUE] [-u|--unset NAME][-s|--show]
+#
+# arguments : -h|--help                help 
+#             -p|--path PATH           path to the nagios mklivestatus socket by default
+#             -r|--remove              remove the path from the config file
+#             -o|--options NAME=VALUE  add option to the configuration
+#             -u|--unset NAME          remove option from the configuration file.
+#             -s|--show                show configuration
+require 'rubygems'
+require 'optparse'
+require 'yaml'
+
+mk_show = false
+
+#loading options
+mk_conf_file = File.join(File.absolute_path(File.dirname(__FILE__)), "nagmk-conf.yml")
+mk_opts = YAML::load_file(mk_conf_file)
+
+optparser = OptionParser.new do |opts|
+  
+  # set help banner
+  opts.banner = "nagmk-ruby [-h|--help] -p|--path PATH [-o|--options NAME=VALUE] {[-f|--file FILE]|query}\n\nExecute the query or the file to the request.\n\n"
+  
+  # add help option
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    # show help
+    puts opts
+    # exit command 
+    exit
+  end
+  
+  # add show list
+  opts.on( '-s', '--show', 'show options' ) do
+    #set to show
+    mk_show=true
+    
+  end
+  
+  opts.on( '-p', '--path PATH', "Path to the Nagios MkLiveStatus socket according to specification :\n\ttcp://<host>:<port> for TCP or <path> for unix socket\n ") do |path|
+    mk_opts[:path] = path
+  end
+  
+  opts.on( '-r', '--remove', "Remove the path from the configuration file") do
+    mk_opts.delete(:path)
+  end
+  
+  opts.on( '-o', '--options NAME=VALUE', "Options to add to make the request.\n\tcolumn_headers : show column header\n\tlimit          : limit output lines\n\toutput         : \'json\' or \'python\' output formating\n\tlocal_time     : local time settings\n\tuser           : authenticated user\n ") do |opt|
+    if opt.match(/^([\w_]+)=(true|false)$/)
+      name,value = opt.split("=")
+      if value == "true"
+        mk_opts[:options][name.to_sym] = true
+      elsif value == "false"
+        mk_opts[:options][name.to_sym] = false
+      end
+    elsif opt.match(/^([\w_]+)=(\d)$/) 
+      name,value = opt.split("=")
+      mk_opts[:options][name.to_sym] = value.to_i
+    elsif opt.match(/^([\w_]+)=(\w)$/)
+      name,value = opt.split("=")
+      mk_opts[:options][name.to_sym] = value
+    end
+  end
+  
+  opts.on( '-u', '--unset NAME', "Remove option from the configuration file.") do |opt|
+    if mk_opts[:options].has_key? opt.to_sym
+      mk_opts[:options].delete(opt.to_sym)
+    end
+  end
+  
+end
+
+optparser.parse!
+
+begin
+  
+  if mk_show
+    #re loading options
+    mk_opts = YAML::load_file(mk_conf_file)
+    puts mk_opts.to_yaml
+  else
+    # write options
+    File.open(mk_conf_file, "w") do |io|
+      io.write(mk_opts.to_yaml)
+      io.close
+    end
+  end
+  
+rescue Exception => ex
+  puts ex.message
+end

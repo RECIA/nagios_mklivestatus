@@ -44,6 +44,8 @@ class Nagios::MkLiveStatus::Request
       
       logger.info("type : "+@mk_livestatus_socket_type)
       logger.info("file : "+@mk_livestatus_socket_path)
+    else
+      raise RequestException.new("Socket error : socket type not recognized for \"#{path}\".")
     end
   end
   

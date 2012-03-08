@@ -1,0 +1,145 @@
+#!/usr/bin/env ruby
+# Use the nagios_mklivestatus gem in order to create and execute the query in parameters.
+#
+# nagmk-ruby [-h|--help] -p|--path PATH [-o|--options NAME=VALUE] {[-f|--file FILE]|query}
+#
+# arguments : -h|--help                help 
+#             -p|--path PATH           path to the nagios mklivestatus socket
+#             -o|--options NAME=VALUE  add option to the request 
+#             -f|--file FILE           file containing the query
+#             query                    the nagios query to execute
+require 'rubygems'
+require 'optparse'
+require 'nagios_mklivestatus'
+require 'logger'
+
+#default logging
+log_opts = {
+  :name  => '/var/logs/nagios_mklivestatus_ruby.log',
+  :level => Logger::INFO
+}
+
+# loading configuration
+mk_conf_file = File.join(File.absolute_path(File.dirname(__FILE__)), "nagmk-conf.yml")
+mk_conf_opts = YAML::load_file(mk_conf_file)
+
+
+mk_file=nil
+mk_opts=Hash.new
+mk_path=nil
+#loading conf path if sets
+mk_path=mk_conf_opts[:path] if mk_conf_opts.has_key? :path
+#loading conf options if sets
+mk_opts=mk_conf_opts[:options] if mk_conf_opts.has_key? :options
+optparser = OptionParser.new do |opts|
+  
+  # set help banner
+  opts.banner = "nagmk-ruby [-h|--help] -p|--path PATH [-o|--options NAME=VALUE] {[-f|--file FILE]|query}\n\nExecute the query or the file to the request.\n\n"
+  
+  # add help option
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    # show help
+    puts opts
+    # exit command 
+    exit
+  end
+  
+  # add verbose option : default to false
+  opts.on( '-v', '--verbose', "Show logs. Multiple time (-vv or -v -v)makes it appears like this :\n\t-v => log on the screen\n\t-vv => log warn\n\t-vvv => log info\n\t-vvvv => log debug\n ") do
+    # if option found set verbose option
+    if log_opts[:name] != STDOUT
+      log_opts[:name] = STDOUT
+    elsif log_opts[:level] != Logger::DEBUG
+      log_opts[:level] = log_opts[:level]-1
+    end
+    
+  end
+  
+  opts.on( '-p', '--path PATH', "Path to the Nagios MkLiveStatus socket according to specification :\n\ttcp://<host>:<port> for TCP or <path> for unix socket\n ") do |path|
+    mk_path = path
+  end
+  
+  opts.on( '-o', '--options NAME=VALUE', "Options to add to make the request.\n\tcolumn_headers : show column header\n\tlimit          : limit output lines\n\toutput         : \'json\' or \'python\' output formating\n\tlocal_time     : local time settings\n\tuser           : authenticated user\n ") do |opt|
+    
+    if opt.match(/^([\w_]+)=(true|false)$/)
+      name,value = opt.split("=")
+      if value == "true"
+        mk_opts[name.to_sym] = true
+      elsif value == "false"
+        mk_opts[name.to_sym] = false
+      end
+    elsif opt.match(/^([\w_]+)=(\d)$/) 
+      name,value = opt.split("=")
+      mk_opts[name.to_sym] = value.to_i
+    elsif opt.match(/^([\w_]+)=(\w)$/)
+      name,value = opt.split("=")
+      mk_opts[name.to_sym] = value
+    end
+  end
+  
+  opts.on( '-f', '--file FILE', "The file containing the query.") do |file|
+    mk_file = file
+  end
+  
+end
+
+optparser.parse!
+
+#set logging options
+Nagios::MkLiveStatus.init(:log=>log_opts)
+
+begin
+  
+  if not mk_path or mk_path.empty?
+    raise ArgumentError.new("Path must be specified in the command line.")
+  end
+  
+  if not STDIN.tty?
+    tty_in = true
+  else
+    tty_in = false
+  end
+
+  # only file  
+  file_ok = mk_file != nil and (not tty_in or ARGV.length == 0)
+  # only gets
+  gets_ok = tty_in and (not mk_file or ARGV.length == 0)
+  # only argv
+  argv_ok = ARGV.length == 1 and (not tty_in or mk_file == nil)
+  
+  if (file_ok and gets_ok or gets_ok and argv_ok or argv_ok and file_ok) or (not argv_ok and not gets_ok and not file_ok)
+    raise ArgumentError.new("Wrong number of arguments. Please look at the help (-h).")
+  end
+  
+  mk_query_str=""
+  if mk_file != nil and not File.exists? mk_file
+    raise ArgumentError.new("The file containing the query doesn't exists.")
+  elsif mk_file != nil
+    File.open(mk_file) do |file|
+      while (line = file.gets)
+        mk_query_str << line
+      end
+    end
+  elsif not STDIN.tty?
+    while (line = STDIN.gets)
+      mk_query_str << line
+    end
+  else
+    mk_query_str = ARGV[0].gsub(/\\n/,"\n")
+  end  
+  
+  mk_request = Nagios::MkLiveStatus::Request.new(mk_path)
+
+  include Nagios::MkLiveStatus::Parser
+  mk_query = nagmk_parse(mk_query_str)
+  
+  mk_results = mk_request.query(mk_query, mk_opts)
+  
+  if log_opts[:name] != STDOUT or log_opts[:level] > Logger::INFO
+    puts mk_results
+  end
+rescue Exception => ex
+  if log_opts[:name] != STDOUT
+    puts ex.message
+  end
+end
