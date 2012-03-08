@@ -16,3 +16,5 @@
 * include query helper
 * include logging management
 * preparing release v1.0.0
+* include wait query manager
+* include binaries for library

@@ -27,6 +27,47 @@ Your reading to use the library
 
 ---
 
+= User Guide
+
+== Configuration
+
+The configuration is made through the following command:
+ nagmk-ruby-config
+
+This command is defined like this:
+
+ nagmk-ruby-config [-h|--help] [-p|--path PATH] [-r|--remove] [-o|--options NAME=VALUE] [-u|--unset NAME][-s|--show]
+
+ arguments : -h|--help                help 
+             -p|--path PATH           path to the nagios mklivestatus socket by default
+             -r|--remove              remove the path from the config file
+             -o|--options NAME=VALUE  add option to the configuration
+             -u|--unset NAME          remove option from the configuration file.
+             -s|--show                show configuration
+
+== Client
+
+The client is the executable file that use the gem in order to execute the query.
+ nagmk-ruby <query>
+ 
+The client can take the query from 3 sources:
+
+from argument :: simply puts your query as argument into the command line "<query>" and with \n for new line
+from file     :: with the -f option you can define a path to the file containing the query
+from pipe     :: echo -e "<query>" | nagmk-ruby
+ 
+The client command is defined like this:
+
+ nagmk-ruby [-h|--help] -p|--path PATH [-o|--options NAME=VALUE] {[-f|--file FILE]|query}
+
+ arguments : -h|--help                help 
+             -p|--path PATH           redefine path to the nagios mklivestatus socket
+             -o|--options NAME=VALUE  add or override option to the request 
+             -f|--file FILE           file containing the query
+             query                    the nagios query to execute 
+
+---
+
 = Developper Guide
 
 == Logging System
