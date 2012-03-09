@@ -16,7 +16,7 @@ require 'yaml'
 
 #default logging
 log_opts = {
-  :name  => '/var/logs/nagios_mklivestatus_ruby.log',
+  :name  => File.join(File.absolute_path(File.dirname(__FILE__)),'..', 'log','nagios_mklivestatus_ruby.log'),
   :level => Logger::INFO
 }
 
