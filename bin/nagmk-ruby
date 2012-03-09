@@ -12,6 +12,7 @@ require 'rubygems'
 require 'optparse'
 require 'nagios_mklivestatus'
 require 'logger'
+require 'yaml'
 
 #default logging
 log_opts = {
