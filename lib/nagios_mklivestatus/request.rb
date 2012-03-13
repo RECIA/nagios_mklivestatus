@@ -67,6 +67,18 @@ class Nagios::MkLiveStatus::Request
   # * :output : output format like json/python, if none provided set to CSV (OutputFormat: out)
   def query(query=nil, options={})
     
+    
+    if logger.debug?
+      logger.debug("query recieved :")
+      query.to_s.split("\n").each do |line|
+        logger.debug(line)
+      end
+      logger.debug("options recieved : ")
+      options.keys.each do |key|
+        logger.debug("#{key} : #{options[key]}")
+      end
+    end
+    
     #set column headers
     column_header = false
     if options.has_key? :column_headers and options[:column_headers]
