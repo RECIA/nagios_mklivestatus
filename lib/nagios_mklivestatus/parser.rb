@@ -107,9 +107,9 @@ module Nagios::MkLiveStatus::Parser
         
         wait_dispatching(command, waits)
         
-      elsif command.match(/^UserAuth: (.+)$/)
+      elsif command.match(/^AuthUser: (.+)$/)
         query_parsed = true
-        nagios_opts[:user] = command.match(/^UserAuth: (.+)$/)[1]
+        nagios_opts[:user] = command.match(/^AuthUser: (.+)$/)[1]
         
       elsif command.match(/^ColumnHeaders: (on|off)$/)
         query_parsed = true
