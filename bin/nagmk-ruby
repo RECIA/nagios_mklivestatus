@@ -61,7 +61,6 @@ optparser = OptionParser.new do |opts|
   end
   
   opts.on( '-o', '--options NAME=VALUE', "Options to add to make the request.\n\tcolumn_headers : show column header\n\tlimit          : limit output lines\n\toutput         : \'json\' or \'python\' output formating\n\tlocal_time     : local time settings\n\tuser           : authenticated user\n ") do |opt|
-    
     if opt.match(/^([\w_]+)=(true|false)$/)
       name,value = opt.split("=")
       if value == "true"
@@ -69,10 +68,10 @@ optparser = OptionParser.new do |opts|
       elsif value == "false"
         mk_opts[name.to_sym] = false
       end
-    elsif opt.match(/^([\w_]+)=(\d)$/) 
+    elsif opt.match(/^([\w_]+)=(\d+)$/) 
       name,value = opt.split("=")
       mk_opts[name.to_sym] = value.to_i
-    elsif opt.match(/^([\w_]+)=(\w)$/)
+    elsif opt.match(/^([\w_]+)=(\w+)$/)
       name,value = opt.split("=")
       mk_opts[name.to_sym] = value
     end
