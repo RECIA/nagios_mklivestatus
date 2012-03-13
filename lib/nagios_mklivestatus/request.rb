@@ -117,7 +117,7 @@ class Nagios::MkLiveStatus::Request
       
       #set user if needed
       if user != nil and not user.empty? and strQuery.match /^GET\s+(hosts|hostgroups|services|servicegroup|log)\s*$/
-        strQuery << "UserAuth: #{user}\n"
+        strQuery << "AuthUser: #{user}\n"
       end
       
       if localtime != nil
@@ -179,7 +179,10 @@ class Nagios::MkLiveStatus::Request
         response.split("\n").each do |line|
           logger.info(line)
         end
+      else
+        logger.info("No results.")
       end
+      
       
       return response
       
