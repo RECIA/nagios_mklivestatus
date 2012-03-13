@@ -87,6 +87,7 @@ optparser.parse!
 
 #set logging options
 Nagios::MkLiveStatus.init(:log=>log_opts)
+include Nagios::MkLiveStatus
 
 begin
   
@@ -141,5 +142,7 @@ begin
 rescue Exception => ex
   if log_opts[:name] != STDOUT
     puts ex.message
+  else
+    logger.error(ex.message)
   end
 end
