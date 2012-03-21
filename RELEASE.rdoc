@@ -18,3 +18,10 @@
 * preparing release v1.0.0
 * include wait query manager
 * include binaries for library
+
+== 0.0.10
+* correcting bugs
+* adding logs to verbose mode 
+
+== 0.0.11
+* correcting bug : limit

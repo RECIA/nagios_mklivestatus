@@ -93,7 +93,7 @@ class Nagios::MkLiveStatus::Request
     
     #set limit
     limit = nil
-    if options.has_key? :limit and options[:limit] != nil and not options[:limit].to_i
+    if options.has_key? :limit and options[:limit] != nil and options[:limit].to_i > 0
       limit = options[:limit].to_i
     end
     
