@@ -91,6 +91,12 @@ class Nagios::MkLiveStatus::Request
       user = options[:user]
     end
     
+    #set separators 
+    separators = nil
+    if options.has_key? :separators and options[:separators] != nil and not options[:separators].empty?
+      separators = options[:separators]
+    end
+    
     #set limit
     limit = nil
     if options.has_key? :limit and options[:limit] != nil and options[:limit].to_i > 0
@@ -130,6 +136,10 @@ class Nagios::MkLiveStatus::Request
       #set user if needed
       if user != nil and not user.empty? and strQuery.match /^GET\s+(hosts|hostgroups|services|servicegroup|log)\s*$/
         strQuery << "AuthUser: #{user}\n"
+      end
+      
+      if separators != nil
+        strQuery << "Separators: #{separators}\n"
       end
       
       if localtime != nil
