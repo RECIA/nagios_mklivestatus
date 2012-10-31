@@ -128,7 +128,7 @@ class Nagios::MkLiveStatus::Request
       end
       
       #set user if needed
-      if user != nil and not user.empty? and strQuery.match /^GET\s+(hosts|hostgroups|services|servicegroup|log)\s*$/
+      if user != nil and not user.empty? and strQuery.match(/^GET\s+(hosts|hostgroups|services|servicegroup|log)\s*$/)
         strQuery << "AuthUser: #{user}\n"
       end
       
@@ -186,7 +186,10 @@ class Nagios::MkLiveStatus::Request
         response = columns.join(";")+"\n"+response
       end
       
+      
+      
       if response
+        response.force_encoding("UTF-8")
         logger.info("Results :")
         response.split("\n").each do |line|
           logger.info(line)
@@ -194,7 +197,6 @@ class Nagios::MkLiveStatus::Request
       else
         logger.info("No results.")
       end
-      
       
       return response
       

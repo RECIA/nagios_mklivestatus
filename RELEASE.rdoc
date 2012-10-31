@@ -27,4 +27,7 @@
 * correcting bug : limit
 
 == 0.0.12
-* take care of spaces in values for filters, stats and wait in the parser and the helper 
+* take care of spaces in values for filters, stats and wait in the parser and the helper
+
+== 0.0.13
+* conversion of the result in UTF-8 for compliance with other programs or interfaces
