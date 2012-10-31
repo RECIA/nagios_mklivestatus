@@ -27,12 +27,12 @@ module Nagios::MkLiveStatus::QueryHelper
   # Split the string into 3 parameters in order to create the correct filter.
   # Must match the regular expression : /^(Filter: )?(\S+) (\S+) ?(\S+)?$/
   def nagmk_filter_from_str(filter_str)
-    predicates = filter_str.strip.match(/^(Filter: )?(\S+) (\S+) ?(\S+)?$/)
+    predicates = filter_str.strip.match(/^(Filter: )?(\S+) (\S+) ?([\S ]+)?$/)
     if predicates
       return nagmk_filter(predicates[2], predicates[3], predicates[4])
     end
     
-    raise QueryException.new("Can't create filter because the expression doesn't match /^(Filter: )?(\S+) (\S+) ?(\S+)?$/")
+    raise QueryException.new("Can't create filter because the expression doesn't match /^(Filter: )?(\S+) (\S+) ?([\S ]+)?$/")
   end
   
   # Create a stats with parameters.
@@ -43,7 +43,7 @@ module Nagios::MkLiveStatus::QueryHelper
   # Split the string into 4 parameters in order to create the correct stats.
   # Must match the regular expression : /^(Stats: )?(\S+) (\S+) ?(\S+)?$/
   def nagmk_stats_from_str(stats_str)
-    predicates = stats_str.strip.match(/^(Stats: )?(\S+) (\S+) ?(\S+)?$/)
+    predicates = stats_str.strip.match(/^(Stats: )?(\S+) (\S+) ?([\S ]+)?$/)
     if predicates
       if get_all_deviations.include? predicates[2]
         return nagmk_stats(predicates[3], nil, nil, predicates[2])
@@ -52,7 +52,7 @@ module Nagios::MkLiveStatus::QueryHelper
       end
     end
     
-    raise QueryException.new("Can't create stats because the expression doesn't match /^(Stats: )?(\S+) (\S+) ?(\S+)?$/")
+    raise QueryException.new("Can't create stats because the expression doesn't match /^(Stats: )?(\S+) (\S+) ?([\S ]+)?$/")
   end
   
   # Create a wait condition with the parameters.
@@ -63,12 +63,12 @@ module Nagios::MkLiveStatus::QueryHelper
   # Split the string into 3 parameters in order to create the correct wait condition.
   # Must match the regular expression : /^(WaitCondition: )?(\S+) (\S+) ?(\S+)?$/
   def nagmk_wait_condition_from_str(wait_cond_str)
-    predicates = wait_cond_str.strip.match(/^(WaitCondition: )?(\S+) (\S+) ?(\S+)?$/)
+    predicates = wait_cond_str.strip.match(/^(WaitCondition: )?(\S+) (\S+) ?([\S ]+)?$/)
     if predicates
       return nagmk_wait_condition(predicates[2], predicates[3], predicates[4])
     end
     
-    raise QueryException.new("Can't create wait condition because the expression doesn't match /^(WaitCondition: )?(\S+) (\S+) ?(\S+)?$/")
+    raise QueryException.new("Can't create wait condition because the expression doesn't match /^(WaitCondition: )?(\S+) (\S+) ?([\S ]+)?$/")
   end
   
   # Create the and filter expression between two filters.

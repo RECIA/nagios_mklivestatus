@@ -1,7 +1,7 @@
 Gem::Specification.new do |s| 
   s.name = "nagios_mklivestatus"
   s.description = "Querying Nagios MKLiveStatus through TCP or Unix sockets"
-  s.version = "0.0.11"
+  s.version = "0.0.12"
   s.author = "Esco-lan Team"
   s.email = "team@esco-lan.org"
   s.homepage = "https://github.com/RECIA/nagios_mklivestatus"

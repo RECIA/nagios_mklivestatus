@@ -25,3 +25,6 @@
 
 == 0.0.11
 * correcting bug : limit
+
+== 0.0.12
+* take care of spaces in values for filters, stats and wait in the parser and the helper 
