@@ -16,7 +16,7 @@ See this {link}[http://mathias-kettner.de/checkmk_livestatus.html] for more deta
 
 In order to use the gem, you have to install it into your rubygem environment.
 
- gem install nagios_maklivestatus
+ gem install nagios_mklivestatus
 
 To integrate it in your applications, it can be done just by adding the two following lines :
 
