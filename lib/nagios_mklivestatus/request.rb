@@ -127,6 +127,9 @@ class Nagios::MkLiveStatus::Request
         strQuery << "\n"
       end
       
+      #get error message if some are given
+      strQuery << "ResponseHeader: fixed16\n"
+      
       #set user if needed
       if user != nil and not user.empty? and strQuery.match(/^GET\s+(hosts|hostgroups|services|servicegroup|log)\s*$/)
         strQuery << "AuthUser: #{user}\n"
@@ -157,10 +160,7 @@ class Nagios::MkLiveStatus::Request
         logger.info(line)
       end
       logger.info("---")
-      
-      #get error message if some are given
-      strQuery << "ResponseHeader: fixed16\n"
-      
+            
       socket = open_socket()
       
       logger.debug("querying ...")
